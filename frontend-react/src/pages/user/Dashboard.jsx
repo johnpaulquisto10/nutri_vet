@@ -1,0 +1,235 @@
+import React, { useState, useEffect } from 'react';
+import { BoltIcon, DocumentTextIcon, ExclamationCircleIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
+import Navbar from '../../components/Navbar';
+import Sidebar from '../../components/Sidebar';
+import BottomNav from '../../components/BottomNav';
+import DashboardCard from '../../components/DashboardCard';
+import ChartCard from '../../components/ChartCard';
+import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
+
+const UserDashboard = () => {
+    const { user } = useAuth();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [stats, setStats] = useState({
+        totalAnimals: 0,
+        activeReports: 0,
+        resolvedReports: 0,
+        advisories: 0,
+    });
+    const [recentReports, setRecentReports] = useState([]);
+    const [advisories, setAdvisories] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    const loadDashboardData = async () => {
+        try {
+            setLoading(true);
+            // Simulated data - replace with actual API calls
+            setStats({
+                totalAnimals: 12,
+                activeReports: 3,
+                resolvedReports: 7,
+                advisories: 2,
+            });
+
+            setRecentReports([
+                {
+                    id: 1,
+                    disease: 'Foot and Mouth Disease',
+                    date: '2025-11-10',
+                    status: 'pending',
+                },
+                {
+                    id: 2,
+                    disease: 'Pneumonia',
+                    date: '2025-11-08',
+                    status: 'resolved',
+                },
+                {
+                    id: 3,
+                    disease: 'Mastitis',
+                    date: '2025-11-05',
+                    status: 'pending',
+                },
+            ]);
+
+            setAdvisories([
+                {
+                    id: 1,
+                    title: 'Seasonal Vaccination Update',
+                    date: '2025-11-10',
+                },
+                {
+                    id: 2,
+                    title: 'Livestock Feed Quality Alert',
+                    date: '2025-11-08',
+                },
+            ]);
+        } catch (error) {
+            toast.error('Failed to load dashboard data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col h-screen bg-gray-50">
+            <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+            <div className="flex flex-1 overflow-hidden">
+                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
+
+                {/* Main Content */}
+                <main className="flex-1 overflow-auto lg:ml-64">
+                    <div className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+                        {/* Header */}
+                        <div className="mb-8">
+                            <h1 className="text-3xl font-semibold text-gray-800">
+                                Welcome, {user?.name}! 👋
+                            </h1>
+                            <p className="text-gray-600 mt-1">
+                                Here's an overview of your livestock and recent reports
+                            </p>
+                        </div>
+
+                        {/* Stats Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <DashboardCard
+                                icon={BoltIcon}
+                                label="Total Livestock"
+                                value={stats.totalAnimals}
+                                trend="2 added this month"
+                                trendUp={true}
+                            />
+                            <DashboardCard
+                                icon={DocumentTextIcon}
+                                label="Active Reports"
+                                value={stats.activeReports}
+                                trend="3 pending"
+                                trendUp={false}
+                            />
+                            <DashboardCard
+                                icon={ExclamationCircleIcon}
+                                label="Resolved Reports"
+                                value={stats.resolvedReports}
+                                trend="100% recovery"
+                                trendUp={true}
+                            />
+                            <DashboardCard
+                                icon={ArrowTrendingUpIcon}
+                                label="New Advisories"
+                                value={stats.advisories}
+                                trend="Latest updates"
+                                trendUp={true}
+                            />
+                        </div>
+
+                        {/* Recent Activity */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Recent Reports */}
+                            <div className="lg:col-span-2">
+                                <ChartCard title="Recent Disease Reports">
+                                    <div className="space-y-3">
+                                        {recentReports.map((report) => (
+                                            <div
+                                                key={report.id}
+                                                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-red-600 transition-colors"
+                                            >
+                                                <div className="flex-1">
+                                                    <h4 className="font-medium text-gray-800">
+                                                        {report.disease}
+                                                    </h4>
+                                                    <p className="text-sm text-gray-500">
+                                                        {new Date(report.date).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${report.status === 'resolved'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-yellow-100 text-yellow-700'
+                                                        }`}
+                                                >
+                                                    {report.status.charAt(0).toUpperCase() +
+                                                        report.status.slice(1)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ChartCard>
+                            </div>
+
+                            {/* Latest Advisories */}
+                            <div>
+                                <ChartCard title="Latest Advisories">
+                                    <div className="space-y-3">
+                                        {advisories.map((advisory) => (
+                                            <div
+                                                key={advisory.id}
+                                                className="p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:border-red-600 transition-colors"
+                                            >
+                                                <h4 className="font-medium text-gray-800 text-sm">
+                                                    {advisory.title}
+                                                </h4>
+                                                <p className="text-xs text-gray-600 mt-1">
+                                                    {new Date(advisory.date).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        ))}
+                                        {advisories.length === 0 && (
+                                            <p className="text-center text-gray-500 py-4">
+                                                No new advisories
+                                            </p>
+                                        )}
+                                    </div>
+                                </ChartCard>
+                            </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="mt-8">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                                Quick Actions
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <a
+                                    href="/user/animals"
+                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                >
+                                    <BoltIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700">Manage Livestock</p>
+                                </a>
+                                <a
+                                    href="/user/reports"
+                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                >
+                                    <DocumentTextIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700">Submit Report</p>
+                                </a>
+                                <a
+                                    href="/user/advisories"
+                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                >
+                                    <ExclamationCircleIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700">View Advisories</p>
+                                </a>
+                                <a
+                                    href="/user/animals"
+                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                >
+                                    <ArrowTrendingUpIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700">Health Stats</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+            <BottomNav />
+        </div>
+    );
+};
+
+export default UserDashboard;
