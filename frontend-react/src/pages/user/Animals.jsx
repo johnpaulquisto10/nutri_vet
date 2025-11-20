@@ -147,7 +147,7 @@ const Animals = () => {
                                 <MagnifyingGlassIcon className="absolute left-3 top-3 w-5 h-5 text-black" />
                                 <input
                                     type="text"
-                                    placeholder="Search by owner or type..."
+                                    placeholder="Search by type or breed..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2.5 bg-white text-black placeholder-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -200,7 +200,6 @@ const Animals = () => {
                                 <table className="w-full">
                                     <thead className="bg-gray-50 border-b border-gray-200">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-800">Owner</th>
                                             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-800">Type</th>
                                             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-800">Breed</th>
                                             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-800">Age (mos)</th>
@@ -216,7 +215,6 @@ const Animals = () => {
                                                 key={animal.id}
                                                 className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                                             >
-                                                <td className="px-6 py-4 font-medium text-gray-800">{animal.name}</td>
                                                 <td className="px-6 py-4 text-gray-700">{animal.type}</td>
                                                 <td className="px-6 py-4 text-gray-700">{animal.breed}</td>
                                                 <td className="px-6 py-4 text-gray-700">{animal.age}</td>
@@ -346,8 +344,8 @@ const Animals = () => {
                                                 key={page}
                                                 onClick={() => setCurrentPage(page)}
                                                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentPage === page
-                                                        ? 'bg-red-600 text-white'
-                                                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                    ? 'bg-red-600 text-white'
+                                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                                                     }`}
                                             >
                                                 {page}
@@ -376,7 +374,7 @@ const Animals = () => {
                                     <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
                                         <input
                                             type="text"
-                                            placeholder="Owner Name"
+                                            placeholder="Animal Name"
                                             value={formData.name}
                                             onChange={(e) =>
                                                 setFormData({ ...formData, name: e.target.value })

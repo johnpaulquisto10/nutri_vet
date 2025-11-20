@@ -10,7 +10,53 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMarkerClick }) => {
+// Red pin icon
+const redPinIcon = L.icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="45" viewBox="0 0 32 45">
+            <path fill="#dc2626" stroke="#991b1b" stroke-width="2" d="M16 0C9.373 0 4 5.373 4 12c0 9 12 28 12 28s12-19 12-28c0-6.627-5.373-12-12-12z"/>
+            <circle cx="16" cy="12" r="5" fill="white"/>
+        </svg>
+    `),
+    iconSize: [32, 45],
+    iconAnchor: [16, 45],
+    popupAnchor: [0, -45]
+});
+
+// Pulsing dot icon
+const pulsingDotIcon = L.divIcon({
+    className: 'custom-pulsing-dot',
+    html: `
+        <style>
+            .pulsing-dot {
+                width: 16px;
+                height: 16px;
+                background: #dc2626;
+                border: 3px solid #fee2e2;
+                border-radius: 50%;
+                position: relative;
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+                }
+                50% {
+                    box-shadow: 0 0 0 15px rgba(220, 38, 38, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+                }
+            }
+        </style>
+        <div class="pulsing-dot"></div>
+    `,
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -11]
+});
+
+const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMarkerClick, markerType = 'default' }) => {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
 
@@ -35,7 +81,16 @@ const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMark
 
             // Add new markers with click event
             markers.forEach((marker) => {
-                const mapMarker = L.marker([marker.lat, marker.lng])
+                // Select icon based on markerType
+                let icon;
+                if (markerType === 'pin') {
+                    icon = redPinIcon;
+                } else if (markerType === 'pulsing') {
+                    icon = pulsingDotIcon;
+                }
+
+                const markerOptions = icon ? { icon } : {};
+                const mapMarker = L.marker([marker.lat, marker.lng], markerOptions)
                     .addTo(mapInstanceRef.current);
 
                 // Add popup with basic info

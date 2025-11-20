@@ -30,7 +30,7 @@ const InteractiveMap = () => {
                         <h1 className="text-3xl font-bold text-secondary-900 mb-2">Reports Map</h1>
                         <p className="text-secondary-600 mb-6">Interactive map showing report locations in Bansud, Oriental Mindoro</p>
 
-                        <MapView markers={markers} center={[12.8167, 121.4667]} zoom={13} />
+                        <MapView markers={markers} center={[12.8167, 121.4667]} zoom={13} markerType="pulsing" />
                     </div>
                 </main>
             </div>

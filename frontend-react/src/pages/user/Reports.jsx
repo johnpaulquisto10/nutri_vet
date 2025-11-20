@@ -10,7 +10,6 @@ import { initialReports } from '../../data/reportsData';
 const Reports = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [reports, setReports] = useState(initialReports);
-    const [showModal, setShowModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedReport, setSelectedReport] = useState(null);
     const [formData, setFormData] = useState({
@@ -40,7 +39,6 @@ const Reports = () => {
 
         setReports([newReport, ...reports]);
         toast.success('Report submitted successfully');
-        setShowModal(false);
         setFormData({
             disease: '',
             animalName: '',
@@ -49,6 +47,8 @@ const Reports = () => {
             sitio: '',
             image: null,
         });
+        // Scroll to reports list
+        document.getElementById('reports-list')?.scrollIntoView({ behavior: 'smooth' });
     };
 
     const mapMarkers = reports.map((r) => ({
@@ -80,28 +80,134 @@ const Reports = () => {
                 <main className="flex-1 overflow-auto lg:ml-64">
                     <div className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
                         {/* Header */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                            <div>
-                                <h1 className="text-3xl font-semibold text-gray-800">Disease Reports</h1>
-                                <p className="text-gray-600 mt-1">Submit and track disease reports</p>
-                            </div>
-                            <button
-                                onClick={() => setShowModal(true)}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                                <PlusIcon className="w-5 h-5" />
-                                New Report
-                            </button>
+                        <div className="mb-8">
+                            <h1 className="text-3xl font-semibold text-gray-800">Disease Reports</h1>
+                            <p className="text-gray-600 mt-1">Submit and track disease reports</p>
+                        </div>
+
+                        {/* Report Form */}
+                        <div className="bg-white rounded-xl shadow-card p-6 mb-8">
+                            <h2 className="text-xl font-bold text-gray-800 mb-6">Submit New Report</h2>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Disease Name *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Disease name"
+                                            value={formData.disease}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, disease: e.target.value })
+                                            }
+                                            className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Animal Name *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Animal name"
+                                            value={formData.animalName}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, animalName: e.target.value })
+                                            }
+                                            className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Description *
+                                    </label>
+                                    <textarea
+                                        placeholder="Describe symptoms..."
+                                        value={formData.description}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, description: e.target.value })
+                                        }
+                                        rows="3"
+                                        className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Sitio *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Sitio"
+                                            value={formData.sitio}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, sitio: e.target.value })
+                                            }
+                                            className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Barangay *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="Barangay"
+                                            value={formData.barangay}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, barangay: e.target.value })
+                                            }
+                                            className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Attach Image
+                                    </label>
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                        <PhotoIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, image: e.target.files?.[0] })
+                                            }
+                                            className="w-full text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </form>
                         </div>
 
                         {/* Map */}
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Report Locations</h3>
-                            <MapView markers={mapMarkers} onMarkerClick={handleMarkerClick} />
+                            <MapView markers={mapMarkers} onMarkerClick={handleMarkerClick} markerType="pin" />
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="mb-8 flex justify-center">
+                            <button
+                                onClick={handleSubmit}
+                                className="px-8 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-lg shadow-lg"
+                            >
+                                Submit Report
+                            </button>
                         </div>
 
                         {/* Reports List */}
-                        <div className="space-y-4">
+                        <div id="reports-list" className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-800">Your Reports</h3>
                             {reports.map((report) => (
                                 <div
@@ -139,134 +245,6 @@ const Reports = () => {
                                 </div>
                             ))}
                         </div>
-
-                        {/* Modal */}
-                        {showModal && (
-                            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-                                <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-[95%] sm:w-full max-w-md sm:max-w-2xl p-3 sm:p-6 my-2 max-h-[92vh] overflow-y-auto">
-                                    <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-6">
-                                        Submit Disease Report
-                                    </h2>
-
-                                    <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
-                                            <div>
-                                                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                                                    Disease Name *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Disease name"
-                                                    value={formData.disease}
-                                                    onChange={(e) =>
-                                                        setFormData({ ...formData, disease: e.target.value })
-                                                    }
-                                                    className="w-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-base bg-white text-black placeholder-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                                                    Animal Name *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Animal name"
-                                                    value={formData.animalName}
-                                                    onChange={(e) =>
-                                                        setFormData({ ...formData, animalName: e.target.value })
-                                                    }
-                                                    className="w-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-base bg-white text-black placeholder-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                                                Description *
-                                            </label>
-                                            <textarea
-                                                placeholder="Describe symptoms..."
-                                                value={formData.description}
-                                                onChange={(e) =>
-                                                    setFormData({ ...formData, description: e.target.value })
-                                                }
-                                                rows="2"
-                                                className="w-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-base bg-white text-black placeholder-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                                            <div>
-                                                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                                                    Sitio *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Sitio"
-                                                    value={formData.sitio}
-                                                    onChange={(e) =>
-                                                        setFormData({ ...formData, sitio: e.target.value })
-                                                    }
-                                                    className="w-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-base bg-white text-black placeholder-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                                                    Barangay *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Barangay"
-                                                    value={formData.barangay}
-                                                    onChange={(e) =>
-                                                        setFormData({ ...formData, barangay: e.target.value })
-                                                    }
-                                                    className="w-full px-2 sm:px-4 py-1 sm:py-2 text-xs sm:text-base bg-white text-black placeholder-black border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                                                    required
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
-                                                Attach Image
-                                            </label>
-                                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 sm:p-6 text-center">
-                                                <PhotoIcon className="w-4 h-4 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-1 sm:mb-2" />
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={(e) =>
-                                                        setFormData({ ...formData, image: e.target.files?.[0] })
-                                                    }
-                                                    className="w-full text-[10px] sm:text-sm"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-6">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowModal(false)}
-                                                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                                            >
-                                                Submit
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Report Details Modal */}
                         {showDetailsModal && selectedReport && (

@@ -118,7 +118,7 @@ const Settings = () => {
                                                 type="text"
                                                 value={profile.role}
                                                 disabled
-                                                className="w-full px-4 py-2 bg-gray-100 text-gray-600 border border-gray-200 rounded-lg cursor-not-allowed"
+                                                className="w-full px-4 py-2 bg-white text-gray-900 border border-gray-200 rounded-lg cursor-not-allowed"
                                             />
                                         </div>
                                     </div>

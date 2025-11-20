@@ -11,6 +11,7 @@ import {
     MapIcon,
     ArrowDownTrayIcon,
     BoltIcon,
+    ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 
@@ -53,6 +54,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     icon: ArrowDownTrayIcon,
                     path: '/admin/export',
                 },
+                {
+                    label: 'Insurance',
+                    icon: ShieldCheckIcon,
+                    path: '/admin/insurance',
+                },
             ]
             : [
                 {
@@ -74,6 +80,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     label: 'Advisories',
                     icon: ExclamationCircleIcon,
                     path: '/user/advisories',
+                },
+                {
+                    label: 'Insurance',
+                    icon: ShieldCheckIcon,
+                    path: '/user/insurance',
                 },
             ];
 
@@ -129,8 +140,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         to={role === 'admin' ? '/admin/settings' : '/user/settings'}
                         onClick={() => toggleSidebar()}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive(role === 'admin' ? '/admin/settings' : '/user/settings')
-                                ? 'bg-red-50 text-red-600'
-                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'bg-red-50 text-red-600'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                             }`}
                     >
                         <Cog6ToothIcon className="w-5 h-5 flex-shrink-0" />

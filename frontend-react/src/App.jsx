@@ -7,6 +7,7 @@ import Animals from './pages/user/Animals'
 import Reports from './pages/user/Reports'
 import Advisories from './pages/user/Advisories'
 import UserSettings from './pages/user/Settings'
+import InsuranceApplication from './pages/user/InsuranceApplication'
 import AdminDashboard from './pages/admin/Dashboard'
 import ManageUsers from './pages/admin/ManageUsers'
 import ManageReports from './pages/admin/ManageReports'
@@ -14,6 +15,7 @@ import ManageAdvisories from './pages/admin/ManageAdvisories'
 import InteractiveMap from './pages/admin/InteractiveMap'
 import ExportReports from './pages/admin/ExportReports'
 import AdminSettings from './pages/admin/Settings'
+import InsuranceApplications from './pages/admin/InsuranceApplications'
 import PrivateRoute from './routes/PrivateRoute'
 import RoleBasedRoute from './routes/RoleBasedRoute'
 
@@ -64,6 +66,14 @@ const App = () => {
         element={
           <RoleBasedRoute allowedRoles={["farmer"]}>
             <UserSettings />
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/user/insurance"
+        element={
+          <RoleBasedRoute allowedRoles={["farmer"]}>
+            <InsuranceApplication />
           </RoleBasedRoute>
         }
       />
@@ -122,6 +132,14 @@ const App = () => {
         element={
           <RoleBasedRoute allowedRoles={["admin"]}>
             <AdminSettings />
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/admin/insurance"
+        element={
+          <RoleBasedRoute allowedRoles={["admin"]}>
+            <InsuranceApplications />
           </RoleBasedRoute>
         }
       />

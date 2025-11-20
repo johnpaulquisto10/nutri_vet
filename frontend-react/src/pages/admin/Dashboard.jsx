@@ -6,6 +6,7 @@ import {
     AlertCircle,
     TrendingUp,
     Activity,
+    ShieldCheck,
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -32,6 +33,14 @@ const AdminDashboard = () => {
         totalReports: 342,
         activeAdvisories: 5,
     });
+
+    const [insuranceApplications, setInsuranceApplications] = useState([]);
+
+    useEffect(() => {
+        // Load insurance applications from localStorage
+        const applications = JSON.parse(localStorage.getItem('insuranceApplications') || '[]');
+        setInsuranceApplications(applications);
+    }, []);
 
     const [chartData] = useState([
         { month: 'Jan', reports: 45, resolved: 42 },
@@ -100,7 +109,7 @@ const AdminDashboard = () => {
                         </div>
 
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                             <DashboardCard
                                 icon={Users}
                                 label="Total Users"
@@ -128,6 +137,13 @@ const AdminDashboard = () => {
                                 value={stats.activeAdvisories}
                                 trend="2 critical"
                                 trendUp={false}
+                            />
+                            <DashboardCard
+                                icon={ShieldCheck}
+                                label="Insurance Apps"
+                                value={insuranceApplications.length}
+                                trend={`${insuranceApplications.filter(a => a.status === 'pending').length} pending`}
+                                trendUp={insuranceApplications.filter(a => a.status === 'pending').length > 0}
                             />
                         </div>
 
@@ -231,10 +247,10 @@ const AdminDashboard = () => {
                                                 <td className="px-4 py-3">
                                                     <span
                                                         className={`px-2 py-1 rounded text-xs font-medium ${report.status === 'resolved'
-                                                                ? 'bg-green-100 text-green-700'
-                                                                : report.status === 'in-progress'
-                                                                    ? 'bg-blue-100 text-blue-700'
-                                                                    : 'bg-yellow-100 text-yellow-700'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : report.status === 'in-progress'
+                                                                ? 'bg-blue-100 text-blue-700'
+                                                                : 'bg-yellow-100 text-yellow-700'
                                                             }`}
                                                     >
                                                         {report.status

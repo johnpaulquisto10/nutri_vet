@@ -173,10 +173,9 @@ const Login = () => {
 
     const sections = [
         { id: 1, label: 'Education' },
-        { id: 2, label: 'Clinics' },
-        { id: 3, label: 'Diagnostics' },
-        { id: 4, label: 'MSI' },
-        { id: 5, label: 'Euthanization' }
+        { id: 2, label: 'Diagnostics' },
+        { id: 3, label: 'MSI' },
+        { id: 4, label: 'Euthanization' }
     ];
 
     return (
@@ -200,22 +199,16 @@ const Login = () => {
 
                         {/* Center Nav Links */}
                         <div className="hidden lg:flex items-center gap-8">
-                            <a href="#education" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Education</a>
-                            <a href="#clinics" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Clinics</a>
-                            <a href="#diagnostics" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Diagnostics</a>
-                            <a href="#msi" className="text-gray-700 hover:text-red-600 font-medium transition-colors">MSI</a>
-                            <a href="#euthanization" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Euthanization</a>
-                            <a href="#about" className="text-gray-700 hover:text-red-600 font-medium transition-colors">About us</a>
-                            <a href="#hub" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Hub</a>
+                            <a href="#section-1" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Education</a>
+                            <a href="#section-3" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Diagnostics</a>
+                            <a href="#section-4" className="text-gray-700 hover:text-red-600 font-medium transition-colors">MSI</a>
+                            <a href="#section-5" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Euthanization</a>
+                            <a href="#about" className="text-gray-700 hover:text-red-600 font-medium transition-colors">About Us</a>
                         </div>
 
                         {/* Right Side - Search and Login */}
                         <div className="flex items-center gap-4">
-                            <button className="text-gray-600 hover:text-red-600">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </button>
+
                             <button
                                 onClick={() => {
                                     setActiveTab('login');
@@ -240,8 +233,8 @@ const Login = () => {
                                     element?.scrollIntoView({ behavior: 'smooth' });
                                 }}
                                 className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${currentSection === index
-                                        ? 'bg-red-600 text-white shadow-lg scale-110'
-                                        : 'bg-white/10 text-gray-400 hover:bg-red-600/20 hover:text-red-600 border border-gray-600/30'
+                                    ? 'bg-red-600 text-white shadow-lg scale-110'
+                                    : 'bg-white/10 text-gray-400 hover:bg-red-600/20 hover:text-red-600 border border-gray-600/30'
                                     }`}
                             >
                                 0{section.id}
@@ -267,17 +260,9 @@ const Login = () => {
                             <div className="max-w-2xl mb-32">
                                 <h1 className="text-6xl lg:text-7xl font-light text-white mb-6">Education</h1>
                                 <p className="text-lg lg:text-xl text-gray-300 mb-8 leading-relaxed">
-                                    For over 50 years we have been educating top experts in the field of veterinary medicine, who are valued both in the Philippines and abroad.
+                                    Our section is dedicated to enhancing the skills and knowledge of individuals involved in livestock management and veterinary science in Bansud, ensuring our local expertise is competitive and valuable.
                                 </p>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('register');
-                                        setShowModal(true);
-                                    }}
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded transition-all"
-                                >
-                                    READ MORE
-                                </button>
+
                             </div>
 
                             {/* Bottom Features */}
@@ -306,39 +291,11 @@ const Login = () => {
                         </div>
                     </section>
 
-                    {/* Section 2 - Clinics */}
-                    <section id="section-2" className="hero-section relative min-h-screen flex items-center overflow-hidden">
-                        {/* Background Image */}
-                        <div className="absolute inset-0 bg-cover bg-center" style={{
-                            backgroundImage: 'url(https://images.unsplash.com/photo-1530126483408-aa533e55bdb2?w=1600&h=900&fit=crop)',
-                            filter: 'brightness(0.4)'
-                        }}></div>
-
-                        {/* Content */}
-                        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 w-full py-20">
-                            <div className="max-w-2xl">
-                                <h1 className="text-6xl lg:text-7xl font-light text-white mb-6">Clinics</h1>
-                                <p className="text-lg lg:text-xl text-gray-300 mb-8 leading-relaxed">
-                                    Our highly qualified team that treats your animals, daily checks everything from teeth to feathers.
-                                </p>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('login');
-                                        setShowModal(true);
-                                    }}
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded transition-all"
-                                >
-                                    BOOK APPOINTMENT
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* Section 3 - Diagnostics */}
+                    {/* Section 2 - Diagnostics */}
                     <section id="section-3" className="hero-section relative min-h-screen flex items-center overflow-hidden">
                         {/* Background Image */}
                         <div className="absolute inset-0 bg-cover bg-center" style={{
-                            backgroundImage: 'url(https://images.unsplash.com/photo-1530126483408-aa533e55bdb2?w=1600&h=900&fit=crop)',
+                            backgroundImage: 'url(https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1600&h=900&fit=crop)',
                             filter: 'brightness(0.4)'
                         }}></div>
 
@@ -349,15 +306,7 @@ const Login = () => {
                                 <p className="text-lg lg:text-xl text-gray-300 mb-8 leading-relaxed">
                                     Advanced laboratory services and diagnostic imaging for accurate animal health assessments.
                                 </p>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('login');
-                                        setShowModal(true);
-                                    }}
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded transition-all"
-                                >
-                                    LEARN MORE
-                                </button>
+
                             </div>
                         </div>
                     </section>
@@ -366,7 +315,7 @@ const Login = () => {
                     <section id="section-4" className="hero-section relative min-h-screen flex items-center overflow-hidden">
                         {/* Background Image */}
                         <div className="absolute inset-0 bg-cover bg-center" style={{
-                            backgroundImage: 'url(https://images.unsplash.com/photo-1560807707-8cc77767d783?w=1600&h=900&fit=crop)',
+                            backgroundImage: 'url(https://images.unsplash.com/photo-1628595351029-c2bf17511435?w=1600&h=900&fit=crop)',
                             filter: 'brightness(0.4)'
                         }}></div>
 
@@ -377,15 +326,7 @@ const Login = () => {
                                 <p className="text-lg lg:text-xl text-gray-300 mb-8 leading-relaxed">
                                     Medical Services and Innovation for the future of veterinary care in the Philippines.
                                 </p>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('login');
-                                        setShowModal(true);
-                                    }}
-                                    className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded transition-all"
-                                >
-                                    EXPLORE
-                                </button>
+
                             </div>
                         </div>
                     </section>
@@ -394,7 +335,7 @@ const Login = () => {
                     <section id="section-5" className="hero-section relative min-h-screen flex items-center overflow-hidden">
                         {/* Background Image */}
                         <div className="absolute inset-0 bg-cover bg-center" style={{
-                            backgroundImage: 'url(https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=1600&h=900&fit=crop)',
+                            backgroundImage: 'url(https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1600&h=900&fit=crop)',
                             filter: 'brightness(0.4)'
                         }}></div>
 
@@ -406,14 +347,102 @@ const Login = () => {
                                     Compassionate end-of-life care services provided with dignity and respect for your animals.
                                 </p>
                                 <button
-                                    onClick={() => {
-                                        setActiveTab('login');
-                                        setShowModal(true);
-                                    }}
+
                                     className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded transition-all"
                                 >
                                     CONTACT US
+
                                 </button>
+
+                                {/* Contact Information */}
+                                <div className="mt-8 space-y-2">
+                                    <p className="text-gray-300 flex items-center gap-2">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        sonnyboymanato@yahoo.com
+                                    </p>
+                                    <p className="text-gray-300 flex items-center gap-2">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                        </svg>
+                                        0928-837-1771
+                                    </p>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </section>
+
+                    {/* About Us Section */}
+                    <section id="about" className="bg-white py-20">
+                        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+                            <div className="max-w-4xl mx-auto">
+                                <div className="text-center mb-12">
+                                    <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                                        Department of Agriculture – Bansud, Oriental Mindoro
+                                    </h2>
+                                    <div className="w-24 h-1 bg-red-600 mx-auto"></div>
+                                </div>
+
+                                <div className="space-y-6 text-gray-700 leading-relaxed">
+                                    <p className="text-lg">
+                                        DA Bansud gives direct support to local farmers and livestock owners. The office provides field assistance, vet guidance, and farm monitoring to improve livestock health and daily farm operations in the municipality.
+                                    </p>
+
+                                    <div className="bg-gray-50 rounded-xl p-8 my-8">
+                                        <h3 className="text-2xl font-semibold text-gray-900 mb-6">Main Services</h3>
+                                        <ul className="space-y-3">
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-gray-700">Livestock management support</span>
+                                            </li>
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-gray-700">Vet assistance and disease control</span>
+                                            </li>
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-gray-700">Field visits and farm checks</span>
+                                            </li>
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-gray-700">Farm inputs when available</span>
+                                            </li>
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-gray-700">Trainings and info sessions</span>
+                                            </li>
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-gray-700">Livestock monitoring in barangays</span>
+                                            </li>
+                                            <li className="flex items-start gap-3">
+                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                <span className="text-gray-700">Support for DA MIMAROPA and LGU projects</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <p className="text-lg text-center text-gray-800 font-medium">
+                                        DA Bansud works with the community to keep farms healthy, safe, and productive for all farmers in Bansud.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -442,7 +471,6 @@ const Login = () => {
                                 <h3 className="font-semibold text-white mb-4">Services</h3>
                                 <ul className="space-y-2">
                                     <li><a href="#education" className="text-gray-400 hover:text-red-600 transition-colors text-sm">Education</a></li>
-                                    <li><a href="#clinics" className="text-gray-400 hover:text-red-600 transition-colors text-sm">Clinics</a></li>
                                     <li><a href="#diagnostics" className="text-gray-400 hover:text-red-600 transition-colors text-sm">Diagnostics</a></li>
                                     <li><a href="#msi" className="text-gray-400 hover:text-red-600 transition-colors text-sm">MSI</a></li>
                                 </ul>
