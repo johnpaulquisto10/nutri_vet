@@ -117,8 +117,10 @@ class DashboardController extends Controller
         // Reports by month (last 6 months)
         $reportsByMonth = DiseaseReport::select(
             DB::raw('DATE_FORMAT(submitted_at, "%Y-%m") as month'),
-            DB::raw('count(*) as count')
+            DB::raw('count(*) as total_reports'),
+            DB::raw('SUM(CASE WHEN report_statuses.status_name = "Resolved" THEN 1 ELSE 0 END) as resolved_reports')
         )
+            ->join('report_statuses', 'disease_reports.report_status_id', '=', 'report_statuses.report_status_id')
             ->where('submitted_at', '>=', now()->subMonths(6))
             ->groupBy('month')
             ->orderBy('month')

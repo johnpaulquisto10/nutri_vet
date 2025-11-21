@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import toast from 'react-hot-toast';
 import { reportService } from '../../services/api';
+import { confirmDelete, confirmResolve, successAlert } from '../../utils/sweetAlert';
 
 const ManageReports = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -45,21 +46,26 @@ const ManageReports = () => {
     );
 
     const handleResolve = async (id) => {
-        try {
-            await reportService.resolve(id, 'Report resolved by admin');
-            toast.success('Report marked as resolved');
-            fetchReports();
-        } catch (error) {
-            console.error('Error resolving report:', error);
-            toast.error('Failed to resolve report');
+        const result = await confirmResolve(id);
+        if (result.isConfirmed) {
+            try {
+                const notes = result.value || 'Report resolved by admin';
+                await reportService.resolve(id, notes);
+                await successAlert('Resolved!', 'Disease report has been marked as resolved.');
+                fetchReports();
+            } catch (error) {
+                console.error('Error resolving report:', error);
+                toast.error('Failed to resolve report');
+            }
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Delete this report?')) {
+        const result = await confirmDelete('this report');
+        if (result.isConfirmed) {
             try {
                 await reportService.delete(id);
-                toast.success('Report deleted');
+                await successAlert('Deleted!', 'Disease report has been deleted.');
                 fetchReports();
             } catch (error) {
                 console.error('Error deleting report:', error);
@@ -105,14 +111,14 @@ const ManageReports = () => {
                                         placeholder="Search by farmer or disease..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                                     />
                                 </div>
                             </div>
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="px-4 py-2.5 border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="px-4 py-2.5 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                             >
                                 <option value="all">All Status</option>
                                 <option value="pending">Pending</option>
@@ -135,6 +141,9 @@ const ManageReports = () => {
                                             </th>
                                             <th className="px-6 py-4 text-left text-sm font-semibold text-secondary-900">
                                                 Animal
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-secondary-900">
+                                                Image
                                             </th>
                                             <th className="px-6 py-4 text-left text-sm font-semibold text-secondary-900">
                                                 Date
@@ -161,6 +170,17 @@ const ManageReports = () => {
                                                 </td>
                                                 <td className="px-6 py-4 text-secondary-700">
                                                     {report.animal_name || 'Unknown'}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    {report.image_url ? (
+                                                        <img
+                                                            src={report.image_url}
+                                                            alt="Report"
+                                                            className="w-16 h-16 object-cover rounded-lg"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm text-secondary-400">No image</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 text-secondary-600">
                                                     {new Date(report.report_date || report.submitted_at).toLocaleDateString()}

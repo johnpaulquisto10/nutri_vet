@@ -6,6 +6,7 @@ import BottomNav from '../../components/BottomNav';
 import MapView from '../../components/MapView';
 import toast from 'react-hot-toast';
 import { reportService, referenceService } from '../../services/api';
+import { successAlert } from '../../utils/sweetAlert';
 
 const Reports = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,20 +80,27 @@ const Reports = () => {
         submitData.append('latitude', location.lat);
         submitData.append('longitude', location.lng);
         if (formData.image) {
-            submitData.append('image', formData.image);
+            submitData.append('images[]', formData.image);
+            console.log('🖼️ Image attached:', {
+                name: formData.image.name,
+                size: formData.image.size,
+                type: formData.image.type
+            });
+        } else {
+            console.log('⚠️ No image attached');
         }
 
         try {
-            console.log('📤 Submitting disease report...');
+            console.log('📤 Submitting disease report with FormData...');
             const response = await reportService.create(submitData);
             console.log('✅ Report submitted successfully!', response.data);
 
-            toast.success(
-                `🎉 Disease report submitted successfully!\n` +
-                `Report ID: ${response.data.report?.report_id || 'Pending'}\n` +
-                `Status: ${response.data.report?.status?.status_name || 'Submitted'}\n` +
-                `Your report will appear on the admin map shortly.`,
-                { duration: 5000 }
+            await successAlert(
+                'Report Submitted! 🎉',
+                '',
+                `<p><b>Report ID:</b> #${response.data.report?.report_id || 'Pending'}</p>
+                <p><b>Status:</b> ${response.data.report?.status?.status_name || 'Submitted'}</p>
+                <p class="text-sm mt-2 text-gray-600">Your report will appear on the admin map shortly.</p>`
             );
 
             setFormData({
@@ -163,7 +171,17 @@ const Reports = () => {
     const handleMarkerClick = (marker) => {
         const report = reports.find(r => r.report_id === marker.id);
         if (report) {
-            setSelectedReport(report);
+            setSelectedReport({
+                ...report,
+                disease: report.disease_name_custom || report.disease?.disease_name || 'Unknown Disease',
+                animalName: report.animal_name,
+                description: report.description,
+                date: report.report_date || report.submitted_at,
+                status: report.status?.status_name?.toLowerCase() || 'pending',
+                sitio: 'N/A',
+                barangay: report.address || 'N/A',
+                image_url: report.image_url
+            });
             setShowDetailsModal(true);
         }
     };
@@ -296,37 +314,46 @@ const Reports = () => {
                             {reports.map((report) => (
                                 <div
                                     key={report.id}
-                                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+                                    className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                                 >
-                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                                        <div className="flex-1">
-                                            <h4 className="text-lg font-semibold text-gray-800">
-                                                {report.disease_name_custom || report.disease?.disease_name || 'Unknown Disease'}
-                                            </h4>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                Animal: {report.animal_name}
-                                            </p>
-                                            <p className="text-secondary-700 mt-3">{report.description}</p>
-                                            {report.latitude && report.longitude && (
-                                                <div className="flex items-center gap-2 text-sm text-secondary-500 mt-3">
-                                                    <MapPinIcon className="w-4 h-4" />
-                                                    <span>
-                                                        Lat: {parseFloat(report.latitude).toFixed(4)}, Lng: {parseFloat(report.longitude).toFixed(4)}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <p className="text-sm text-secondary-500 mt-2">
-                                                {new Date(report.report_date || report.submitted_at).toLocaleDateString()}
-                                            </p>
+                                    {report.image_url && (
+                                        <img
+                                            src={report.image_url}
+                                            alt="Report"
+                                            className="w-full h-48 object-cover"
+                                        />
+                                    )}
+                                    <div className="p-6">
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                                            <div className="flex-1">
+                                                <h4 className="text-lg font-semibold text-gray-800">
+                                                    {report.disease_name_custom || report.disease?.disease_name || 'Unknown Disease'}
+                                                </h4>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    Animal: {report.animal_name}
+                                                </p>
+                                                <p className="text-secondary-700 mt-3">{report.description}</p>
+                                                {report.latitude && report.longitude && (
+                                                    <div className="flex items-center gap-2 text-sm text-secondary-500 mt-3">
+                                                        <MapPinIcon className="w-4 h-4" />
+                                                        <span>
+                                                            Lat: {parseFloat(report.latitude).toFixed(4)}, Lng: {parseFloat(report.longitude).toFixed(4)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <p className="text-sm text-secondary-500 mt-2">
+                                                    {new Date(report.report_date || report.submitted_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <span
+                                                className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${(report.status?.status_name || report.status)?.toLowerCase() === 'resolved'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-yellow-100 text-yellow-700'
+                                                    }`}
+                                            >
+                                                {report.status?.status_name || report.status || 'Pending'}
+                                            </span>
                                         </div>
-                                        <span
-                                            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${(report.status?.status_name || report.status)?.toLowerCase() === 'resolved'
-                                                ? 'bg-green-100 text-green-700'
-                                                : 'bg-yellow-100 text-yellow-700'
-                                                }`}
-                                        >
-                                            {report.status?.status_name || report.status || 'Pending'}
-                                        </span>
                                     </div>
                                 </div>
                             ))}
@@ -356,6 +383,15 @@ const Reports = () => {
 
                                         {/* Content */}
                                         <div className="space-y-4 sm:space-y-6 pr-8">
+                                            {selectedReport.image_url && (
+                                                <div>
+                                                    <img
+                                                        src={selectedReport.image_url}
+                                                        alt="Report"
+                                                        className="w-full rounded-lg max-h-96 object-cover"
+                                                    />
+                                                </div>
+                                            )}
                                             <div>
                                                 <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
                                                     {selectedReport.disease}

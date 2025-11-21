@@ -1,60 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExclamationCircleIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import BottomNav from '../../components/BottomNav';
+import toast from 'react-hot-toast';
+import { advisoryService } from '../../services/api';
 
 const Advisories = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [advisories] = useState([
-        {
-            id: 1,
-            title: 'Avian Influenza Alert',
-            description:
-                'There has been a reported increase in avian influenza cases in neighboring provinces. Ensure proper biosecurity measures and monitor your birds closely.',
-            severity: 'high',
-            date: '2025-11-10',
-            category: 'Disease Alert',
-        },
-        {
-            id: 2,
-            title: 'Seasonal Vaccination Update',
-            description:
-                'It is now the recommended season for cattle vaccinations. Contact your veterinarian to schedule vaccinations for your herd.',
-            severity: 'medium',
-            date: '2025-11-08',
-            category: 'Vaccination',
-        },
-        {
-            id: 3,
-            title: 'Feed Quality Standards',
-            description:
-                'New regulations on livestock feed quality have been implemented. Ensure your feed suppliers meet the new standards.',
-            severity: 'medium',
-            date: '2025-11-05',
-            category: 'Feed Management',
-        },
-        {
-            id: 4,
-            title: 'Water Supply Safety',
-            description:
-                'Maintain clean water sources for your livestock to prevent waterborne diseases. Test water regularly.',
-            severity: 'low',
-            date: '2025-11-01',
-            category: 'Health & Safety',
-        },
-        {
-            id: 5,
-            title: 'Mastitis Prevention Guidelines',
-            description:
-                'New guidelines released for mastitis prevention in dairy cattle. Implement proper milking hygiene practices.',
-            severity: 'high',
-            date: '2025-10-28',
-            category: 'Disease Prevention',
-        },
-    ]);
+    const [advisories, setAdvisories] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const getSeverityColor = (severity) => {
+    useEffect(() => {
+        fetchAdvisories();
+    }, []);
+
+    const fetchAdvisories = async () => {
+        try {
+            console.log('📥 User: Fetching advisories...');
+            const response = await advisoryService.getAll();
+            // Handle paginated response
+            const advisoriesData = response.data.data || response.data;
+            console.log('✅ User: Loaded', advisoriesData.length, 'advisories');
+            setAdvisories(Array.isArray(advisoriesData) ? advisoriesData : []);
+        } catch (error) {
+            console.error('❌ User: Error fetching advisories:', error);
+            toast.error('Failed to load advisories');
+            setAdvisories([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getSeverityColor = (severityObj) => {
+        const severity = severityObj?.severity_name?.toLowerCase() || 'low';
         switch (severity) {
             case 'high':
                 return 'border-red-200 bg-red-50';
@@ -65,7 +44,8 @@ const Advisories = () => {
         }
     };
 
-    const getSeverityBadge = (severity) => {
+    const getSeverityBadge = (severityObj) => {
+        const severity = severityObj?.severity_name?.toLowerCase() || 'low';
         switch (severity) {
             case 'high':
                 return 'bg-red-100 text-red-700';
@@ -94,72 +74,72 @@ const Advisories = () => {
                         </div>
 
                         {/* Advisories */}
-                        <div className="space-y-4">
-                            {advisories.map((advisory) => (
-                                <div
-                                    key={advisory.id}
-                                    className={`bg-white border rounded-lg p-6 transition-all hover:shadow-lg ${getSeverityColor(
-                                        advisory.severity
-                                    )}`}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="flex-shrink-0">
-                                            <div className={`p-2 rounded-lg ${getSeverityBadge(advisory.severity)}`}>
-                                                <ExclamationCircleIcon className="w-6 h-6" />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex-1">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex-1">
-                                                    <h3 className="text-lg font-semibold text-gray-800">
-                                                        {advisory.title}
-                                                    </h3>
-                                                    <p className="text-sm text-gray-600 mt-1">
-                                                        {advisory.category}
-                                                    </p>
-                                                </div>
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getSeverityBadge(
-                                                        advisory.severity
-                                                    )}`}
-                                                >
-                                                    {advisory.severity.charAt(0).toUpperCase() +
-                                                        advisory.severity.slice(1)}{' '}
-                                                    Priority
-                                                </span>
-                                            </div>
-
-                                            <p className="mt-3 text-gray-700 leading-relaxed">
-                                                {advisory.description}
-                                            </p>
-
-                                            <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
-                                                <div className="flex items-center gap-1">
-                                                    <CalendarIcon className="w-4 h-4" />
-                                                    {new Date(advisory.date).toLocaleDateString('en-US', {
-                                                        year: 'numeric',
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                    })}
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <ClockIcon className="w-4 h-4" />
-                                                    {new Date(advisory.date).toLocaleTimeString('en-US', {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    })}
+                        {loading ? (
+                            <div className="text-center py-12">
+                                <p className="text-gray-600">Loading advisories...</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {advisories.map((advisory) => (
+                                    <div
+                                        key={advisory.advisory_id}
+                                        className={`bg-white border rounded-lg p-6 transition-all hover:shadow-lg ${getSeverityColor(
+                                            advisory.severity
+                                        )}`}
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex-shrink-0">
+                                                <div className={`p-2 rounded-lg ${getSeverityBadge(advisory.severity)}`}>
+                                                    <ExclamationCircleIcon className="w-6 h-6" />
                                                 </div>
                                             </div>
 
-                                            <button className="mt-4 px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 border border-red-200 rounded-lg hover:bg-red-50 transition-colors">
-                                                Read More
-                                            </button>
+                                            <div className="flex-1">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="flex-1">
+                                                        <h3 className="text-lg font-semibold text-gray-800">
+                                                            {advisory.title}
+                                                        </h3>
+                                                        <p className="text-sm text-gray-600 mt-1">
+                                                            {advisory.category?.category_name || 'General'}
+                                                        </p>
+                                                    </div>
+                                                    <span
+                                                        className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getSeverityBadge(
+                                                            advisory.severity
+                                                        )}`}
+                                                    >
+                                                        {advisory.severity?.severity_name || 'Low'} Priority
+                                                    </span>
+                                                </div>
+
+                                                <p className="mt-3 text-gray-700 leading-relaxed">
+                                                    {advisory.description}
+                                                </p>
+
+                                                <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
+                                                    <div className="flex items-center gap-1">
+                                                        <CalendarIcon className="w-4 h-4" />
+                                                        {new Date(advisory.published_at || advisory.created_at).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        })}
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <ClockIcon className="w-4 h-4" />
+                                                        {new Date(advisory.published_at || advisory.created_at).toLocaleTimeString('en-US', {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
 
                         {/* Empty State */}
                         {advisories.length === 0 && (

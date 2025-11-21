@@ -123,9 +123,9 @@ const Register = () => {
                                         value={formData.name}
                                         onChange={handleChange}
                                         placeholder="John Doe"
-                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.name
-                                                ? 'border-red-300 focus:ring-red-500'
-                                                : 'border-secondary-200'
+                                        className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.name
+                                            ? 'border-red-300 focus:ring-red-500'
+                                            : 'border-secondary-200'
                                             }`}
                                     />
                                 </div>
@@ -151,9 +151,9 @@ const Register = () => {
                                         value={formData.email}
                                         onChange={handleChange}
                                         placeholder="your@email.com"
-                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.email
-                                                ? 'border-red-300 focus:ring-red-500'
-                                                : 'border-secondary-200'
+                                        className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.email
+                                            ? 'border-red-300 focus:ring-red-500'
+                                            : 'border-secondary-200'
                                             }`}
                                     />
                                 </div>
@@ -179,9 +179,9 @@ const Register = () => {
                                         value={formData.password}
                                         onChange={handleChange}
                                         placeholder="••••••••"
-                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.password
-                                                ? 'border-red-300 focus:ring-red-500'
-                                                : 'border-secondary-200'
+                                        className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.password
+                                            ? 'border-red-300 focus:ring-red-500'
+                                            : 'border-secondary-200'
                                             }`}
                                     />
                                 </div>
@@ -207,9 +207,9 @@ const Register = () => {
                                         value={formData.password_confirmation}
                                         onChange={handleChange}
                                         placeholder="••••••••"
-                                        className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.password_confirmation
-                                                ? 'border-red-300 focus:ring-red-500'
-                                                : 'border-secondary-200'
+                                        className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors ${errors.password_confirmation
+                                            ? 'border-red-300 focus:ring-red-500'
+                                            : 'border-secondary-200'
                                             }`}
                                     />
                                 </div>

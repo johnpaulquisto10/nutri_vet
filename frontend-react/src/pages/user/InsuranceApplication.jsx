@@ -5,6 +5,7 @@ import Sidebar from '../../components/Sidebar';
 import BottomNav from '../../components/BottomNav';
 import toast from 'react-hot-toast';
 import { insuranceService, referenceService } from '../../services/api';
+import { successAlert } from '../../utils/sweetAlert';
 
 const InsuranceApplication = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -118,12 +119,12 @@ const InsuranceApplication = () => {
             console.log('✅ Application submitted successfully!', response.data);
 
             // Show success notification with details
-            toast.success(
-                `🎉 Insurance application submitted successfully!\n` +
-                `Application ID: ${response.data.application?.application_id || 'Pending'}\n` +
-                `Status: ${response.data.application?.status?.status_name || 'Pending'}\n` +
-                `Admin will review your application soon.`,
-                { duration: 5000 }
+            await successAlert(
+                'Application Submitted! 🎉',
+                '',
+                `<p><b>Application ID:</b> #${response.data.application?.application_id || 'Pending'}</p>
+                <p><b>Status:</b> ${response.data.application?.status?.status_name || 'Pending'}</p>
+                <p class="text-sm mt-2 text-gray-600">Admin will review your application soon. You will be notified once reviewed.</p>`
             );
 
             // Reload applications to show the new one
@@ -201,7 +202,7 @@ const InsuranceApplication = () => {
                                             name="farmerName"
                                             value={formData.farmerName}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                             placeholder="Enter full name"
                                             required
                                         />
@@ -261,7 +262,7 @@ const InsuranceApplication = () => {
                                             name="contactNumber"
                                             value={formData.contactNumber}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                             placeholder="09XX-XXX-XXXX"
                                             pattern="[0-9]{4}-[0-9]{3}-[0-9]{4}"
                                             required
@@ -305,7 +306,7 @@ const InsuranceApplication = () => {
                                                 name="animalTypeOther"
                                                 value={formData.animalTypeOther}
                                                 onChange={handleInputChange}
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                                className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                                 placeholder="Please specify animal type"
                                                 required
                                             />

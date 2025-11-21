@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import toast from 'react-hot-toast';
 import { advisoryService, referenceService } from '../../services/api';
+import { confirmDelete, successAlert } from '../../utils/sweetAlert';
 
 const ManageAdvisories = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -95,12 +96,13 @@ const ManageAdvisories = () => {
         try {
             if (editingId) {
                 await advisoryService.update(editingId, formData);
-                toast.success('Advisory updated successfully');
+                setShowModal(false);
+                await successAlert('Updated!', 'Advisory has been updated successfully.');
             } else {
                 await advisoryService.create(formData);
-                toast.success('Advisory created successfully');
+                setShowModal(false);
+                await successAlert('Created!', 'New advisory has been created. All users can now see it.');
             }
-            setShowModal(false);
             fetchAdvisories();
         } catch (error) {
             console.error('Error saving advisory:', error);
@@ -109,10 +111,11 @@ const ManageAdvisories = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this advisory?')) {
+        const result = await confirmDelete('this advisory');
+        if (result.isConfirmed) {
             try {
                 await advisoryService.delete(id);
-                toast.success('Advisory deleted');
+                await successAlert('Deleted!', 'Advisory has been deleted.');
                 fetchAdvisories();
             } catch (error) {
                 console.error('Error deleting advisory:', error);
@@ -166,7 +169,7 @@ const ManageAdvisories = () => {
                                     placeholder="Search advisories..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 />
                             </div>
                         </div>
@@ -205,7 +208,7 @@ const ManageAdvisories = () => {
                                                 <Edit className="w-4 h-4" />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(advisory.id)}
+                                                onClick={() => handleDelete(advisory.advisory_id)}
                                                 className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -242,7 +245,7 @@ const ManageAdvisories = () => {
                                                 onChange={(e) =>
                                                     setFormData({ ...formData, title: e.target.value })
                                                 }
-                                                className="w-full px-4 py-2 border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                                                 required
                                             />
                                         </div>
@@ -258,26 +261,65 @@ const ManageAdvisories = () => {
                                                     setFormData({ ...formData, description: e.target.value })
                                                 }
                                                 rows="6"
-                                                className="w-full px-4 py-2 border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                                                 required
                                             />
                                         </div>
 
                                         <div>
                                             <label className="block text-sm font-medium text-secondary-700 mb-1">
-                                                Severity Level
+                                                Category *
                                             </label>
                                             <select
-                                                value={formData.severity}
+                                                value={formData.category_id}
                                                 onChange={(e) =>
-                                                    setFormData({ ...formData, severity: e.target.value })
+                                                    setFormData({ ...formData, category_id: e.target.value })
                                                 }
-                                                className="w-full px-4 py-2 border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                required
                                             >
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
+                                                <option value="">Select Category</option>
+                                                {categories.map((cat) => (
+                                                    <option key={cat.category_id} value={cat.category_id}>
+                                                        {cat.category_name}
+                                                    </option>
+                                                ))}
                                             </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-secondary-700 mb-1">
+                                                Severity Level *
+                                            </label>
+                                            <select
+                                                value={formData.severity_id}
+                                                onChange={(e) =>
+                                                    setFormData({ ...formData, severity_id: e.target.value })
+                                                }
+                                                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                required
+                                            >
+                                                <option value="">Select Severity</option>
+                                                {severities.map((sev) => (
+                                                    <option key={sev.severity_id} value={sev.severity_id}>
+                                                        {sev.severity_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-secondary-700 mb-1">
+                                                Expires At (Optional)
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={formData.expires_at}
+                                                onChange={(e) =>
+                                                    setFormData({ ...formData, expires_at: e.target.value })
+                                                }
+                                                className="w-full px-4 py-2 bg-white border border-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                            />
                                         </div>
 
                                         <div className="flex gap-2 mt-6">

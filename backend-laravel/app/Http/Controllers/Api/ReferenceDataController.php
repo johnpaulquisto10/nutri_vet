@@ -84,13 +84,7 @@ class ReferenceDataController extends Controller
      */
     public function advisoryCategories()
     {
-        $categories = AdvisoryCategory::orderBy('category_name')->get()->map(function ($category) {
-            return [
-                'id' => $category->category_id,
-                'name' => $category->category_name,
-                'description' => $category->description,
-            ];
-        });
+        $categories = AdvisoryCategory::orderBy('category_name')->get();
         return response()->json($categories);
     }
 
@@ -99,14 +93,7 @@ class ReferenceDataController extends Controller
      */
     public function advisorySeverities()
     {
-        $severities = AdvisorySeverity::orderBy('severity_name')->get()->map(function ($severity) {
-            return [
-                'id' => $severity->severity_id,
-                'name' => $severity->severity_name,
-                'color' => $severity->severity_color,
-                'description' => $severity->severity_description,
-            ];
-        });
+        $severities = AdvisorySeverity::orderBy('severity_name')->get();
         return response()->json($severities);
     }
 }

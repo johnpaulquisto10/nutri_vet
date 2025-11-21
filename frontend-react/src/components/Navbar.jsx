@@ -10,15 +10,19 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
 import { getInitials } from '../utils/helpers';
+import { confirmLogout } from '../utils/sweetAlert';
 
 const Navbar = ({ toggleSidebar }) => {
     const { user, role, logout } = useAuth();
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
+    const handleLogout = async () => {
+        const result = await confirmLogout();
+        if (result.isConfirmed) {
+            logout();
+            navigate('/login');
+        }
     };
 
     return (

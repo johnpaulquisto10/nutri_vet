@@ -46,22 +46,55 @@ const AdminDashboard = () => {
         fetchDashboardData();
     }, []);
 
+    const [chartData, setChartData] = useState([]);
+    const [animalData, setAnimalData] = useState([]);
+    const [recentReports, setRecentReports] = useState([]);
+
     const fetchDashboardData = async () => {
         try {
+            console.log('📥 Admin: Fetching dashboard data...');
             const response = await dashboardService.getAdminDashboard();
             const data = response.data;
-            setStats(data.statistics || data);
+
+            console.log('✅ Admin Dashboard Data:', data);
+
+            // Set statistics
+            setStats(data.statistics || {});
+
+            // Process chart data for Reports Trend (monthly reports)
+            if (data.charts?.reports_by_month) {
+                const monthlyData = data.charts.reports_by_month.map(item => ({
+                    month: new Date(item.month + '-01').toLocaleDateString('en-US', { month: 'short' }),
+                    reports: item.total_reports || item.count || 0,
+                    resolved: item.resolved_reports || 0
+                }));
+                setChartData(monthlyData);
+                console.log('📊 Monthly Reports Chart Data:', monthlyData);
+            }
+
+            // Process animal data for Livestock Distribution
+            if (data.charts?.applications_by_type) {
+                const livestockData = data.charts.applications_by_type.map(item => ({
+                    type: item.animal_type_name,
+                    count: item.count
+                }));
+                setAnimalData(livestockData);
+                console.log('🐄 Livestock Distribution Data:', livestockData);
+            }
+
+            // Set recent reports
+            if (data.recent_reports) {
+                setRecentReports(data.recent_reports);
+                console.log('📋 Recent Reports:', data.recent_reports.length);
+            }
+
         } catch (error) {
-            console.error('Error fetching dashboard data:', error);
+            console.error('❌ Error fetching dashboard data:', error);
+            toast.error('Failed to load dashboard data');
         } finally {
             setLoading(false);
         }
     };
-
-    // Chart data will come from API in future enhancement
-    const chartData = stats.monthly_reports || [];
-    const animalData = stats.animal_statistics || [];
-    const recentReports = stats.recent_reports || [];
 
     return (
         <div className="flex flex-col h-screen bg-secondary-50">

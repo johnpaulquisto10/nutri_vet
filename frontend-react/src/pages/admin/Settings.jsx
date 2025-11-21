@@ -51,7 +51,7 @@ const Settings = () => {
                 full_name: profile.name,
                 phone_number: profile.phone,
             });
-            toast.success('Profile updated successfully');
+            await successAlert('Profile Updated!', 'Your information has been saved successfully.');
         } catch (error) {
             console.error('Error updating profile:', error);
             toast.error(error.response?.data?.message || 'Failed to update profile');
@@ -70,7 +70,7 @@ const Settings = () => {
                 password: password.new,
                 password_confirmation: password.confirm,
             });
-            toast.success('Password changed successfully');
+            await successAlert('Password Changed!', 'Your password has been updated successfully.');
             setPassword({ current: '', new: '', confirm: '' });
         } catch (error) {
             console.error('Error changing password:', error);

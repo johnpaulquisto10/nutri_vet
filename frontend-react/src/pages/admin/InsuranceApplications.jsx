@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import toast from 'react-hot-toast';
 import { insuranceService } from '../../services/api';
+import { confirmApprove, confirmReject, successAlert } from '../../utils/sweetAlert';
 
 const InsuranceApplications = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,25 +93,36 @@ const InsuranceApplications = () => {
     };
 
     const handleStatusUpdate = async (id, newStatus) => {
-        try {
-            if (newStatus === 'approved') {
-                await insuranceService.approve(id, adminNotes);
-            } else {
-                await insuranceService.reject(id, adminNotes);
-            }
+        let result;
 
-            const statusText = newStatus === 'approved' ? 'approved' : 'rejected';
-            toast.success(`Application ${statusText} successfully`);
+        if (newStatus === 'approved') {
+            result = await confirmApprove(id);
+        } else {
+            result = await confirmReject(id);
+        }
 
-            if (showModal) {
-                setShowModal(false);
-                setSelectedApplication(null);
-                setAdminNotes('');
+        if (result.isConfirmed) {
+            try {
+                const notes = result.value || adminNotes;
+
+                if (newStatus === 'approved') {
+                    await insuranceService.approve(id, notes);
+                    await successAlert('Approved!', 'Insurance application has been approved. Farmer will be notified.');
+                } else {
+                    await insuranceService.reject(id, notes);
+                    await successAlert('Rejected', 'Insurance application has been rejected. Farmer will be notified.');
+                }
+
+                if (showModal) {
+                    setShowModal(false);
+                    setSelectedApplication(null);
+                    setAdminNotes('');
+                }
+                loadApplications();
+            } catch (error) {
+                console.error('Error updating application:', error);
+                toast.error('Failed to update application');
             }
-            loadApplications();
-        } catch (error) {
-            console.error('Error updating application:', error);
-            toast.error('Failed to update application');
         }
     };
 
@@ -233,7 +245,7 @@ const InsuranceApplications = () => {
                                             placeholder="Search by farmer name, barangay, or animal type..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                                         />
                                     </div>
                                 </div>

@@ -71,6 +71,13 @@ class DiseaseReportController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug logging
+        \Log::info('Disease Report Submission', [
+            'has_images_file' => $request->hasFile('images'),
+            'all_files' => $request->allFiles(),
+            'request_data' => $request->except('images'),
+        ]);
+
         $validated = $request->validate([
             'disease_id' => 'nullable|exists:diseases,disease_id',
             'disease_name_custom' => 'nullable|string|max:255',
@@ -102,15 +109,27 @@ class DiseaseReportController extends Controller
 
         // Handle image uploads
         if ($request->hasFile('images')) {
+            \Log::info('Processing images for report', ['report_id' => $report->report_id]);
             foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('disease-reports', 'public');
 
-                ReportImage::create([
+                $imageRecord = ReportImage::create([
                     'report_id' => $report->report_id,
                     'image_path' => $path,
+                    'image_filename' => $image->getClientOriginalName(),
+                    'image_size' => $image->getSize(),
+                    'mime_type' => $image->getMimeType(),
                     'is_primary' => $index === 0,
                 ]);
+
+                \Log::info('Image saved', [
+                    'image_id' => $imageRecord->image_id,
+                    'path' => $path,
+                    'filename' => $image->getClientOriginalName(),
+                ]);
             }
+        } else {
+            \Log::warning('No images uploaded with this report', ['report_id' => $report->report_id]);
         }
 
         $report->load(['disease', 'status', 'images']);
