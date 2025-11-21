@@ -1,80 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Search, Plus, CheckCircle } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import toast from 'react-hot-toast';
+import { reportService } from '../../services/api';
 
 const ManageReports = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [reports, setReports] = useState([
-        {
-            id: 1,
-            farmer: 'Juan Dela Cruz',
-            disease: 'Foot and Mouth Disease',
-            animal: 'Bessie',
-            date: '2025-11-10',
-            status: 'pending',
-            description: 'Animal showing signs of lameness',
-        },
-        {
-            id: 2,
-            farmer: 'Maria Santos',
-            disease: 'Pneumonia',
-            animal: 'Daisy',
-            date: '2025-11-09',
-            status: 'in-progress',
-            description: 'Severe coughing and labored breathing',
-        },
-        {
-            id: 3,
-            farmer: 'Pedro Lopez',
-            disease: 'Mastitis',
-            animal: 'Spot',
-            date: '2025-11-08',
-            status: 'resolved',
-            description: 'Udder inflammation in dairy cattle',
-        },
-        {
-            id: 4,
-            farmer: 'Ana Garcia',
-            disease: 'Avian Influenza',
-            animal: 'Flock 1',
-            date: '2025-11-07',
-            status: 'pending',
-            description: 'Multiple birds showing respiratory symptoms',
-        },
-    ]);
+    const [reports, setReports] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchReports();
+    }, []);
+
+    const fetchReports = async () => {
+        try {
+            const response = await reportService.getAll();
+            const reportsData = response.data.data || response.data;
+            setReports(Array.isArray(reportsData) ? reportsData : []);
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+            toast.error('Failed to load reports');
+            setReports([]);
+        } finally {
+            setLoading(false);
+        }
+    };
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
 
     const filteredReports = reports.filter(
-        (report) =>
-            (report.farmer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                report.disease.toLowerCase().includes(searchTerm.toLowerCase())) &&
-            (filterStatus === 'all' || report.status === filterStatus)
+        (report) => {
+            const farmerName = report.reporter?.full_name || '';
+            const diseaseName = report.disease_name_custom || report.disease?.disease_name || '';
+            const statusName = report.status?.status_name?.toLowerCase() || 'pending';
+
+            return (
+                (farmerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    diseaseName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                (filterStatus === 'all' || statusName === filterStatus)
+            );
+        }
     );
 
-    const handleResolve = (id) => {
-        setReports(
-            reports.map((r) =>
-                r.id === id ? { ...r, status: 'resolved' } : r
-            )
-        );
-        toast.success('Report marked as resolved');
-    };
-
-    const handleDelete = (id) => {
-        if (window.confirm('Delete this report?')) {
-            setReports(reports.filter((r) => r.id !== id));
-            toast.success('Report deleted');
+    const handleResolve = async (id) => {
+        try {
+            await reportService.resolve(id, 'Report resolved by admin');
+            toast.success('Report marked as resolved');
+            fetchReports();
+        } catch (error) {
+            console.error('Error resolving report:', error);
+            toast.error('Failed to resolve report');
         }
     };
 
-    const getStatusColor = (status) => {
+    const handleDelete = async (id) => {
+        if (window.confirm('Delete this report?')) {
+            try {
+                await reportService.delete(id);
+                toast.success('Report deleted');
+                fetchReports();
+            } catch (error) {
+                console.error('Error deleting report:', error);
+                toast.error('Failed to delete report');
+            }
+        }
+    };
+
+    const getStatusColor = (statusObj) => {
+        const status = statusObj?.status_name?.toLowerCase() || 'pending';
         switch (status) {
             case 'resolved':
                 return 'bg-green-100 text-green-700';
-            case 'in-progress':
+            case 'in progress':
                 return 'bg-blue-100 text-blue-700';
             default:
                 return 'bg-yellow-100 text-yellow-700';
@@ -151,20 +150,20 @@ const ManageReports = () => {
                                     <tbody>
                                         {filteredReports.map((report) => (
                                             <tr
-                                                key={report.id}
+                                                key={report.report_id}
                                                 className="border-b border-secondary-100 hover:bg-secondary-50 transition-colors"
                                             >
                                                 <td className="px-6 py-4 font-medium text-secondary-900">
-                                                    {report.farmer}
+                                                    {report.reporter?.full_name || 'Unknown'}
                                                 </td>
                                                 <td className="px-6 py-4 text-secondary-700">
-                                                    {report.disease}
+                                                    {report.disease_name_custom || report.disease?.disease_name || 'Unknown'}
                                                 </td>
                                                 <td className="px-6 py-4 text-secondary-700">
-                                                    {report.animal}
+                                                    {report.animal_name || 'Unknown'}
                                                 </td>
                                                 <td className="px-6 py-4 text-secondary-600">
-                                                    {new Date(report.date).toLocaleDateString()}
+                                                    {new Date(report.report_date || report.submitted_at).toLocaleDateString()}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span
@@ -172,20 +171,14 @@ const ManageReports = () => {
                                                             report.status
                                                         )}`}
                                                     >
-                                                        {report.status
-                                                            .split('-')
-                                                            .map(
-                                                                (word) =>
-                                                                    word.charAt(0).toUpperCase() + word.slice(1)
-                                                            )
-                                                            .join(' ')}
+                                                        {report.status?.status_name || 'Pending'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
-                                                        {report.status !== 'resolved' && (
+                                                        {report.status?.status_name !== 'Resolved' && (
                                                             <button
-                                                                onClick={() => handleResolve(report.id)}
+                                                                onClick={() => handleResolve(report.report_id)}
                                                                 className="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors"
                                                                 title="Mark as resolved"
                                                             >
@@ -193,7 +186,7 @@ const ManageReports = () => {
                                                             </button>
                                                         )}
                                                         <button
-                                                            onClick={() => handleDelete(report.id)}
+                                                            onClick={() => handleDelete(report.report_id)}
                                                             className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
                                                         >
                                                             <Trash2 className="w-4 h-4" />

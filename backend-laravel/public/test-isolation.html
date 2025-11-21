@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>🧪 Test User Data Isolation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #ff5252;
+            font-weight: bold;
+        }
+
+        .info {
+            color: #00d4ff;
+        }
+
+        .warning {
+            color: #FFC107;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            max-height: 300px;
+            font-size: 12px;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .user-panel {
+            display: inline-block;
+            width: 48%;
+            vertical-align: top;
+            margin: 1%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Test User Data Isolation</h1>
+        <p style="text-align: center;">Verify that users only see their own data</p>
+
+        <div class="test-section">
+            <h2>Step 1: Register Two Different Users</h2>
+            <button onclick="registerUser1()">Register User 1 (test1@example.com)</button>
+            <button onclick="registerUser2()">Register User 2 (test2@example.com)</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Step 2: Submit Data for Each User</h2>
+            <button onclick="submitDataUser1()">Submit Application as User 1</button>
+            <button onclick="submitDataUser2()">Submit Application as User 2</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Step 3: Verify Data Isolation</h2>
+            <button onclick="checkUser1Data()">Check User 1's Data</button>
+            <button onclick="checkUser2Data()">Check User 2's Data</button>
+            <button onclick="runCompleteTest()">🚀 Run Complete Test</button>
+        </div>
+
+        <div style="display: flex; gap: 20px;">
+            <div class="test-section user-panel">
+                <h2>👤 User 1 Data</h2>
+                <div id="user1-data"></div>
+            </div>
+
+            <div class="test-section user-panel">
+                <h2>👤 User 2 Data</h2>
+                <div id="user2-data"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Test Log</h2>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        let user1Token = null;
+        let user2Token = null;
+        let user1AppId = null;
+        let user2AppId = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            output.innerHTML += `<div class="${type}">${icon} ${new Date().toLocaleTimeString()} - ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function displayUserData(userId, data) {
+            const element = document.getElementById(`user${userId}-data`);
+            element.innerHTML = `
+                <table>
+                    <tr><th>Email</th><td>${data.email || 'N/A'}</td></tr>
+                    <tr><th>Applications</th><td>${data.applications_count || 0}</td></tr>
+                    <tr><th>Reports</th><td>${data.reports_count || 0}</td></tr>
+                </table>
+                <h4>Applications:</h4>
+                <pre>${JSON.stringify(data.applications || [], null, 2)}</pre>
+            `;
+        }
+
+        async function registerUser1() {
+            log('📝 Registering User 1...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: 'Test User One',
+                        email: 'test1@example.com',
+                        password: 'password123',
+                        password_confirmation: 'password123',
+                        phone_number: '09111111111'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    user1Token = data.token;
+                    log('✅ User 1 registered successfully', 'success');
+                    displayUserData(1, { email: data.user.email, applications_count: 0, reports_count: 0 });
+                } else {
+                    log(`❌ User 1 registration failed: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function registerUser2() {
+            log('📝 Registering User 2...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: 'Test User Two',
+                        email: 'test2@example.com',
+                        password: 'password123',
+                        password_confirmation: 'password123',
+                        phone_number: '09222222222'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    user2Token = data.token;
+                    log('✅ User 2 registered successfully', 'success');
+                    displayUserData(2, { email: data.user.email, applications_count: 0, reports_count: 0 });
+                } else {
+                    log(`❌ User 2 registration failed: ${data.message || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function submitDataUser1() {
+            if (!user1Token) {
+                log('⚠️ User 1 not registered yet!', 'warning');
+                return;
+            }
+
+            log('📤 User 1 submitting application...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/insurance-applications`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${user1Token}`
+                    },
+                    body: JSON.stringify({
+                        animal_type_id: 1,
+                        purpose_id: 1,
+                        barangay_id: 1,
+                        contact_number: '09111111111',
+                        number_of_heads: 5,
+                        age_months: 12,
+                        breed: 'User 1 Breed',
+                        basic_color: 'Brown',
+                        male_count: 2,
+                        female_count: 3
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    user1AppId = data.application.application_id;
+                    log(`✅ User 1 application created (ID: ${user1AppId})`, 'success');
+                } else {
+                    log(`❌ User 1 submission failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function submitDataUser2() {
+            if (!user2Token) {
+                log('⚠️ User 2 not registered yet!', 'warning');
+                return;
+            }
+
+            log('📤 User 2 submitting application...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/insurance-applications`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${user2Token}`
+                    },
+                    body: JSON.stringify({
+                        animal_type_id: 1,
+                        purpose_id: 1,
+                        barangay_id: 1,
+                        contact_number: '09222222222',
+                        number_of_heads: 10,
+                        age_months: 18,
+                        breed: 'User 2 Breed',
+                        basic_color: 'Black',
+                        male_count: 5,
+                        female_count: 5
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    user2AppId = data.application.application_id;
+                    log(`✅ User 2 application created (ID: ${user2AppId})`, 'success');
+                } else {
+                    log(`❌ User 2 submission failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkUser1Data() {
+            if (!user1Token) {
+                log('⚠️ User 1 not registered yet!', 'warning');
+                return;
+            }
+
+            log('🔍 Checking User 1 data...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/insurance-applications`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${user1Token}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const applications = data.data || data;
+                    log(`✅ User 1 sees ${applications.length} application(s)`, 'success');
+
+                    // Check if user1 can see user2's data
+                    const hasUser2Data = applications.some(app => app.application_id === user2AppId);
+                    if (hasUser2Data) {
+                        log('❌ SECURITY ISSUE: User 1 can see User 2\'s data!', 'error');
+                    } else {
+                        log('✅ SECURE: User 1 cannot see User 2\'s data', 'success');
+                    }
+
+                    displayUserData(1, {
+                        email: 'test1@example.com',
+                        applications_count: applications.length,
+                        applications: applications.map(a => ({
+                            id: a.application_id,
+                            breed: a.breed,
+                            heads: a.number_of_heads
+                        }))
+                    });
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkUser2Data() {
+            if (!user2Token) {
+                log('⚠️ User 2 not registered yet!', 'warning');
+                return;
+            }
+
+            log('🔍 Checking User 2 data...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/insurance-applications`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${user2Token}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const applications = data.data || data;
+                    log(`✅ User 2 sees ${applications.length} application(s)`, 'success');
+
+                    // Check if user2 can see user1's data
+                    const hasUser1Data = applications.some(app => app.application_id === user1AppId);
+                    if (hasUser1Data) {
+                        log('❌ SECURITY ISSUE: User 2 can see User 1\'s data!', 'error');
+                    } else {
+                        log('✅ SECURE: User 2 cannot see User 1\'s data', 'success');
+                    }
+
+                    displayUserData(2, {
+                        email: 'test2@example.com',
+                        applications_count: applications.length,
+                        applications: applications.map(a => ({
+                            id: a.application_id,
+                            breed: a.breed,
+                            heads: a.number_of_heads
+                        }))
+                    });
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runCompleteTest() {
+            document.getElementById('output').innerHTML = '';
+            log('🚀 Starting complete isolation test...', 'info');
+            log('═══════════════════════════════════════', 'info');
+
+            await registerUser1();
+            await new Promise(r => setTimeout(r, 1000));
+
+            await registerUser2();
+            await new Promise(r => setTimeout(r, 1000));
+
+            await submitDataUser1();
+            await new Promise(r => setTimeout(r, 1000));
+
+            await submitDataUser2();
+            await new Promise(r => setTimeout(r, 2000));
+
+            await checkUser1Data();
+            await new Promise(r => setTimeout(r, 1000));
+
+            await checkUser2Data();
+
+            log('═══════════════════════════════════════', 'info');
+            log('✅ Test complete! Check results above.', 'success');
+        }
+
+        window.onload = () => {
+            log('🚀 User Data Isolation Test Ready', 'info');
+            log('Click "Run Complete Test" to verify data isolation', 'info');
+        };
+    </script>
+</body>
+
+</html>

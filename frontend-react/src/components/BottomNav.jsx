@@ -21,7 +21,7 @@ const BottomNav = () => {
 
     const adminLinks = [
         { path: '/admin/dashboard', icon: Squares2X2Icon, label: 'Dashboard' },
-        { path: '/admin/users', icon: UserGroupIcon, label: 'Users' },
+
         { path: '/admin/reports', icon: DocumentTextIcon, label: 'Reports' },
         { path: '/admin/advisories', icon: ExclamationCircleIcon, label: 'Advisories' },
     ];
@@ -40,8 +40,8 @@ const BottomNav = () => {
                             key={link.path}
                             to={link.path}
                             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${isActive
-                                    ? 'text-red-600'
-                                    : 'text-gray-600 hover:text-red-600'
+                                ? 'text-red-600'
+                                : 'text-gray-600 hover:text-red-600'
                                 }`}
                         >
                             <Icon className="w-6 h-6 mb-1" />

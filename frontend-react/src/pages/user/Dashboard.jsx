@@ -6,6 +6,7 @@ import BottomNav from '../../components/BottomNav';
 import DashboardCard from '../../components/DashboardCard';
 import ChartCard from '../../components/ChartCard';
 import { useAuth } from '../../context/AuthContext';
+import { dashboardService } from '../../services/api';
 import toast from 'react-hot-toast';
 
 const UserDashboard = () => {
@@ -28,48 +29,21 @@ const UserDashboard = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            // Simulated data - replace with actual API calls
+            const response = await dashboardService.getFarmerDashboard();
+            const data = response.data;
+            const stats = data.statistics || data;
+
             setStats({
-                totalAnimals: 12,
-                activeReports: 3,
-                resolvedReports: 7,
-                advisories: 2,
+                totalAnimals: stats.approved_applications || 0,
+                activeReports: stats.active_reports || 0,
+                resolvedReports: (stats.total_reports || 0) - (stats.active_reports || 0),
+                advisories: stats.unread_advisories || 0,
             });
 
-            setRecentReports([
-                {
-                    id: 1,
-                    disease: 'Foot and Mouth Disease',
-                    date: '2025-11-10',
-                    status: 'pending',
-                },
-                {
-                    id: 2,
-                    disease: 'Pneumonia',
-                    date: '2025-11-08',
-                    status: 'resolved',
-                },
-                {
-                    id: 3,
-                    disease: 'Mastitis',
-                    date: '2025-11-05',
-                    status: 'pending',
-                },
-            ]);
-
-            setAdvisories([
-                {
-                    id: 1,
-                    title: 'Seasonal Vaccination Update',
-                    date: '2025-11-10',
-                },
-                {
-                    id: 2,
-                    title: 'Livestock Feed Quality Alert',
-                    date: '2025-11-08',
-                },
-            ]);
+            setRecentReports(data.recent_reports || []);
+            setAdvisories(data.recent_advisories || []);
         } catch (error) {
+            console.error('Failed to load dashboard data:', error);
             toast.error('Failed to load dashboard data');
         } finally {
             setLoading(false);
@@ -88,7 +62,7 @@ const UserDashboard = () => {
                         {/* Header */}
                         <div className="mb-8">
                             <h1 className="text-3xl font-semibold text-gray-800">
-                                Welcome, {user?.name}! 👋
+                                Welcome, {user?.full_name || user?.name || 'User'}! 👋
                             </h1>
                             <p className="text-gray-600 mt-1">
                                 Here's an overview of your livestock and recent reports
@@ -99,9 +73,9 @@ const UserDashboard = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <DashboardCard
                                 icon={BoltIcon}
-                                label="Total Livestock"
+                                label="Insured Animals"
                                 value={stats.totalAnimals}
-                                trend="2 added this month"
+                                trend="Approved applications"
                                 trendUp={true}
                             />
                             <DashboardCard
@@ -135,25 +109,27 @@ const UserDashboard = () => {
                                     <div className="space-y-3">
                                         {recentReports.map((report) => (
                                             <div
-                                                key={report.id}
+                                                key={report.report_id || report.id}
                                                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-red-600 transition-colors"
                                             >
                                                 <div className="flex-1">
                                                     <h4 className="font-medium text-gray-800">
-                                                        {report.disease}
+                                                        {report.disease?.disease_name || report.disease || 'Unknown Disease'}
                                                     </h4>
                                                     <p className="text-sm text-gray-500">
-                                                        {new Date(report.date).toLocaleDateString()}
+                                                        {new Date(report.submitted_at || report.date).toLocaleDateString()}
                                                     </p>
                                                 </div>
                                                 <span
-                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${report.status === 'resolved'
+                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${(report.status?.status_name || report.status || '').toLowerCase() === 'resolved'
                                                         ? 'bg-green-100 text-green-700'
                                                         : 'bg-yellow-100 text-yellow-700'
                                                         }`}
                                                 >
-                                                    {report.status.charAt(0).toUpperCase() +
-                                                        report.status.slice(1)}
+                                                    {(() => {
+                                                        const statusText = report.status?.status_name || report.status || 'pending';
+                                                        return statusText.charAt(0).toUpperCase() + statusText.slice(1);
+                                                    })()}
                                                 </span>
                                             </div>
                                         ))}
@@ -165,23 +141,24 @@ const UserDashboard = () => {
                             <div>
                                 <ChartCard title="Latest Advisories">
                                     <div className="space-y-3">
-                                        {advisories.map((advisory) => (
-                                            <div
-                                                key={advisory.id}
-                                                className="p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:border-red-600 transition-colors"
-                                            >
-                                                <h4 className="font-medium text-gray-800 text-sm">
-                                                    {advisory.title}
-                                                </h4>
-                                                <p className="text-xs text-gray-600 mt-1">
-                                                    {new Date(advisory.date).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                        ))}
-                                        {advisories.length === 0 && (
+                                        {advisories.length === 0 ? (
                                             <p className="text-center text-gray-500 py-4">
                                                 No new advisories
                                             </p>
+                                        ) : (
+                                            advisories.map((advisory) => (
+                                                <div
+                                                    key={advisory.advisory_id}
+                                                    className="p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:border-red-600 transition-colors"
+                                                >
+                                                    <h4 className="font-medium text-gray-800 text-sm">
+                                                        {advisory.title}
+                                                    </h4>
+                                                    <p className="text-xs text-gray-600 mt-1">
+                                                        {new Date(advisory.published_at || advisory.created_at).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            ))
                                         )}
                                     </div>
                                 </ChartCard>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Disease Reports API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #dc2626;
+        }
+
+        button {
+            background: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #991b1b;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #f3f4f6;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Test Disease Reports API</h1>
+
+        <div>
+            <button onclick="testAPI()">Test API Connection</button>
+            <button onclick="getAllReports()">Get All Reports</button>
+            <button onclick="testWithAuth()">Test with Auth Token</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+
+        <div id="status"></div>
+        <div id="result" class="result"></div>
+        <div id="table"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        function showResult(data) {
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        function clearResults() {
+            document.getElementById('result').textContent = '';
+            document.getElementById('table').innerHTML = '';
+            document.getElementById('status').textContent = '';
+        }
+
+        async function testAPI() {
+            showStatus('Testing API connection...', 'info');
+            try {
+                const response = await fetch(API_URL + '/disease-reports', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus(`✅ API Connected! Status: ${response.status}`, 'success');
+                    showResult(data);
+
+                    // Show summary
+                    if (data.data) {
+                        const reports = data.data;
+                        showStatus(`✅ Found ${reports.length} reports. Total in DB: ${data.total || reports.length}`, 'success');
+                        displayReportsTable(reports);
+                    }
+                } else {
+                    showStatus(`❌ API Error: ${response.status} - ${data.message || 'Unknown error'}`, 'error');
+                    showResult(data);
+                }
+            } catch (error) {
+                showStatus(`❌ Connection Failed: ${error.message}`, 'error');
+                showResult({ error: error.message, stack: error.stack });
+            }
+        }
+
+        async function getAllReports() {
+            showStatus('Fetching all reports...', 'info');
+            try {
+                const response = await fetch(API_URL + '/disease-reports');
+                const data = await response.json();
+
+                console.log('API Response:', data);
+
+                showResult(data);
+
+                if (data.data) {
+                    const reports = data.data;
+                    showStatus(`✅ Retrieved ${reports.length} reports`, 'success');
+                    displayReportsTable(reports);
+
+                    // Check for coordinates
+                    const withCoords = reports.filter(r => r.latitude && r.longitude);
+                    console.log(`Reports with coordinates: ${withCoords.length}/${reports.length}`);
+
+                    if (withCoords.length === 0) {
+                        showStatus(`⚠️ Warning: None of the ${reports.length} reports have coordinates!`, 'error');
+                    }
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function testWithAuth() {
+            const token = prompt('Enter your auth token (from localStorage):');
+            if (!token) return;
+
+            showStatus('Testing with authentication...', 'info');
+            try {
+                const response = await fetch(API_URL + '/disease-reports', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                showResult(data);
+
+                if (response.ok && data.data) {
+                    showStatus(`✅ Authenticated! Found ${data.data.length} reports`, 'success');
+                    displayReportsTable(data.data);
+                }
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function displayReportsTable(reports) {
+            const tableDiv = document.getElementById('table');
+
+            if (reports.length === 0) {
+                tableDiv.innerHTML = '<p style="color: red; font-weight: bold;">⚠️ No reports found in database!</p>';
+                return;
+            }
+
+            let html = '<h3>Reports Summary</h3><table><thead><tr>';
+            html += '<th>ID</th><th>Disease</th><th>Animal</th><th>Latitude</th><th>Longitude</th><th>Address</th><th>Status</th><th>Reporter</th></tr></thead><tbody>';
+
+            reports.forEach(report => {
+                const lat = report.latitude || 'NULL';
+                const lng = report.longitude || 'NULL';
+                const latStyle = !report.latitude ? 'color: red; font-weight: bold;' : '';
+                const lngStyle = !report.longitude ? 'color: red; font-weight: bold;' : '';
+
+                html += '<tr>';
+                html += `<td>${report.report_id}</td>`;
+                html += `<td>${report.disease?.disease_name || report.disease_name_custom || 'N/A'}</td>`;
+                html += `<td>${report.animal_name || 'N/A'}</td>`;
+                html += `<td style="${latStyle}">${lat}</td>`;
+                html += `<td style="${lngStyle}">${lng}</td>`;
+                html += `<td>${report.address || 'N/A'}</td>`;
+                html += `<td>${report.status?.status_name || 'N/A'}</td>`;
+                html += `<td>${report.reporter?.name || report.user?.name || 'N/A'}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            console.log('Page loaded. Ready to test API.');
+            console.log('API URL:', API_URL);
+        };
+    </script>
+</body>
+
+</html>

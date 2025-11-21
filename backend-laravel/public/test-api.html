@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>API Test - Insurance Applications</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+
+        .success {
+            color: #00ff00;
+        }
+
+        .error {
+            color: #ff0000;
+        }
+
+        .info {
+            color: #00aaff;
+        }
+
+        pre {
+            background: #000;
+            padding: 10px;
+            border: 1px solid #333;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🧪 API Test - Insurance Applications</h1>
+    <button onclick="testLogin()">1. Login as Admin</button>
+    <button onclick="testGetApplications()">2. Get Applications</button>
+    <button onclick="testAll()">3. Test Complete Flow</button>
+    <hr>
+    <div id="output"></div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        let token = null;
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const color = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            output.innerHTML += `<div class="${color}">${new Date().toLocaleTimeString()} - ${message}</div>`;
+        }
+
+        async function testLogin() {
+            log('🔐 Attempting login as admin...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@nutrivet.com',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.token;
+                    log(`✅ Login successful! Token: ${token.substring(0, 20)}...`, 'success');
+                    log(`   User: ${data.user.name}`, 'success');
+                    log(`   Role: ${data.role}`, 'success');
+                } else {
+                    log(`❌ Login failed: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetApplications() {
+            if (!token) {
+                log('⚠️  Please login first!', 'error');
+                return;
+            }
+
+            log('📥 Fetching insurance applications...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/insurance-applications`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const applications = data.data || data;
+                    log(`✅ Received ${applications.length} applications`, 'success');
+                    log(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+
+                    if (applications.length > 0) {
+                        log('📊 First application:', 'info');
+                        log(`   - ID: ${applications[0].application_id}`, 'success');
+                        log(`   - Applicant: ${applications[0].applicant?.name}`, 'success');
+                        log(`   - Status: ${applications[0].status?.status_name}`, 'success');
+                        log(`   - Heads: ${applications[0].number_of_heads}`, 'success');
+                    }
+                } else {
+                    log(`❌ Failed: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAll() {
+            await testLogin();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await testGetApplications();
+        }
+    </script>
+</body>
+
+</html>

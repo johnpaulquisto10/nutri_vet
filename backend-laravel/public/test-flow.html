@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>🧪 Complete User → Admin Flow Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #ff5252;
+            font-weight: bold;
+        }
+
+        .info {
+            color: #00d4ff;
+        }
+
+        .warning {
+            color: #FFC107;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            max-height: 300px;
+            font-size: 12px;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .badge-success {
+            background: #4CAF50;
+        }
+
+        .badge-pending {
+            background: #FF9800;
+        }
+
+        .badge-error {
+            background: #f44336;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Complete User → Admin Flow Test</h1>
+        <p class="subtitle">Testing Insurance Application & Disease Report Submissions</p>
+
+        <!-- Test Controls -->
+        <div class="test-section">
+            <h2>🎮 Test Controls</h2>
+            <button onclick="runCompleteTest()">▶️ Run Complete Test</button>
+            <button onclick="testInsuranceFlow()">📋 Test Insurance Application</button>
+            <button onclick="testDiseaseReportFlow()">🏥 Test Disease Report</button>
+            <button onclick="clearOutput()">🗑️ Clear Output</button>
+        </div>
+
+        <!-- Status Dashboard -->
+        <div class="test-section">
+            <h2>📊 Real-time Status</h2>
+            <div id="status-dashboard">
+                <span class="status-badge badge-pending">Waiting to start...</span>
+            </div>
+        </div>
+
+        <!-- Output Log -->
+        <div class="test-section">
+            <h2>📝 Test Log</h2>
+            <div id="output" style="min-height: 200px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        let farmerToken = null;
+        let adminToken = null;
+
+        function updateStatus(message, type = 'pending') {
+            const dashboard = document.getElementById('status-dashboard');
+            const badgeClass = type === 'success' ? 'badge-success' : type === 'error' ? 'badge-error' : 'badge-pending';
+            dashboard.innerHTML = `<span class="status-badge ${badgeClass}">${message}</span>`;
+        }
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            const className = type;
+            output.innerHTML += `<div class="${className}">${icon} ${new Date().toLocaleTimeString()} - ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+            updateStatus('Ready for testing', 'pending');
+        }
+
+        async function loginAsFarmer() {
+            log('🔐 Step 1: Logging in as FARMER...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'farmer@nutrivet.com',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    farmerToken = data.token;
+                    log(`✅ Farmer logged in: ${data.user.name}`, 'success');
+                    return true;
+                } else {
+                    log(`❌ Farmer login failed: ${JSON.stringify(data)}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function loginAsAdmin() {
+            log('🔐 Step 1: Logging in as ADMIN...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@nutrivet.com',
+                        password: 'password123'
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    adminToken = data.token;
+                    log(`✅ Admin logged in: ${data.user.name}`, 'success');
+                    return true;
+                } else {
+                    log(`❌ Admin login failed: ${JSON.stringify(data)}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function submitInsuranceApplication() {
+            log('📤 Step 2: Submitting Insurance Application...', 'info');
+            updateStatus('Submitting insurance application...', 'pending');
+
+            try {
+                const response = await fetch(`${API_URL}/insurance-applications`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${farmerToken}`
+                    },
+                    body: JSON.stringify({
+                        animal_type_id: 1,
+                        purpose_id: 1,
+                        barangay_id: 1,
+                        contact_number: '09123456789',
+                        number_of_heads: 5,
+                        age_months: 12,
+                        breed: 'Test Breed',
+                        basic_color: 'Brown',
+                        male_count: 2,
+                        female_count: 3
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    log(`✅ Application submitted! ID: ${data.application.application_id}`, 'success');
+                    log(`   Status: ${data.application.status.status_name}`, 'success');
+                    updateStatus('✅ Application submitted successfully!', 'success');
+                    return data.application.application_id;
+                } else {
+                    log(`❌ Submission failed: ${JSON.stringify(data)}`, 'error');
+                    updateStatus('❌ Submission failed', 'error');
+                    return null;
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                updateStatus('❌ Error occurred', 'error');
+                return null;
+            }
+        }
+
+        async function checkAdminDashboard(expectedId) {
+            log('👀 Step 3: Checking Admin Dashboard...', 'info');
+            updateStatus('Verifying in admin dashboard...', 'pending');
+
+            try {
+                const response = await fetch(`${API_URL}/insurance-applications`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const applications = data.data || data;
+                    log(`✅ Admin sees ${applications.length} total applications`, 'success');
+
+                    const found = applications.find(app => app.application_id === expectedId);
+                    if (found) {
+                        log(`✅ NEW APPLICATION FOUND IN ADMIN DASHBOARD!`, 'success');
+                        log(`   Applicant: ${found.applicant.name}`, 'success');
+                        log(`   Status: ${found.status.status_name}`, 'success');
+                        updateStatus('✅ Verified in admin dashboard!', 'success');
+                        return true;
+                    } else {
+                        log(`⚠️ Application not found yet (might need refresh)`, 'warning');
+                        updateStatus('⚠️ Application not visible yet', 'warning');
+                        return false;
+                    }
+                } else {
+                    log(`❌ Failed to fetch admin data: ${JSON.stringify(data)}`, 'error');
+                    updateStatus('❌ Admin check failed', 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                updateStatus('❌ Error occurred', 'error');
+                return false;
+            }
+        }
+
+        async function testInsuranceFlow() {
+            clearOutput();
+            log('═══════════════════════════════════════', 'info');
+            log('🧪 TESTING: Insurance Application Flow', 'info');
+            log('═══════════════════════════════════════', 'info');
+
+            // Step 1: Login as farmer
+            if (!await loginAsFarmer()) return;
+
+            // Step 2: Submit application
+            const appId = await submitInsuranceApplication();
+            if (!appId) return;
+
+            // Wait a moment for database sync
+            log('⏳ Waiting for database sync...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Step 3: Login as admin
+            if (!await loginAsAdmin()) return;
+
+            // Step 4: Check admin dashboard
+            await checkAdminDashboard(appId);
+
+            log('═══════════════════════════════════════', 'info');
+            log('✅ TEST COMPLETE!', 'success');
+            log('═══════════════════════════════════════', 'info');
+        }
+
+        async function testDiseaseReportFlow() {
+            clearOutput();
+            log('═══════════════════════════════════════', 'info');
+            log('🧪 TESTING: Disease Report Flow', 'info');
+            log('═══════════════════════════════════════', 'info');
+            log('⚠️ Disease reports require multipart/form-data', 'warning');
+            log('Please test manually in the browser UI', 'info');
+        }
+
+        async function runCompleteTest() {
+            await testInsuranceFlow();
+        }
+
+        // Auto-run on load
+        window.onload = () => {
+            log('🚀 Test page loaded and ready!', 'info');
+            log('Click a button to start testing...', 'info');
+        };
+    </script>
+</body>
+
+</html>

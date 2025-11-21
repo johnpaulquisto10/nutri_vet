@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>🧪 Test Registration API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .success {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #ff5252;
+            font-weight: bold;
+        }
+
+        .info {
+            color: #00d4ff;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+        }
+
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Test Registration API</h1>
+
+        <div class="test-section">
+            <h2>Test User Registration</h2>
+            <input type="text" id="full_name" placeholder="Full Name" value="Test User">
+            <input type="email" id="email" placeholder="Email" value="testuser@example.com">
+            <input type="text" id="phone" placeholder="Phone Number" value="09123456789">
+            <input type="password" id="password" placeholder="Password" value="password123">
+            <input type="password" id="password_confirmation" placeholder="Confirm Password" value="password123">
+            <button onclick="testRegistration()">Register New User</button>
+        </div>
+
+        <div class="test-section">
+            <h2>Output</h2>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const className = type;
+            output.innerHTML += `<div class="${className}">${new Date().toLocaleTimeString()} - ${message}</div>`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+
+        async function testRegistration() {
+            clearOutput();
+            log('🔐 Testing User Registration...', 'info');
+
+            const data = {
+                full_name: document.getElementById('full_name').value,
+                email: document.getElementById('email').value,
+                phone_number: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
+                password_confirmation: document.getElementById('password_confirmation').value,
+            };
+
+            log(`📤 Sending registration data for: ${data.full_name}`, 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    log('✅ Registration successful!', 'success');
+                    log(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'info');
+                    log(`User ID: ${result.user.id}`, 'success');
+                    log(`Email: ${result.user.email}`, 'success');
+                    log(`Role: ${result.role}`, 'success');
+                    log(`Token: ${result.token.substring(0, 30)}...`, 'success');
+                } else {
+                    log('❌ Registration failed!', 'error');
+                    log(`<pre>${JSON.stringify(result, null, 2)}</pre>`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error: ${error.message}`, 'error');
+                log(`Make sure the backend server is running on port 8000`, 'error');
+            }
+        }
+
+        window.onload = () => {
+            log('🚀 Ready to test registration!', 'info');
+            log('Click the button to register a new user', 'info');
+        };
+    </script>
+</body>
+
+</html>

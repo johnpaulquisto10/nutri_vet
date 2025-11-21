@@ -8,6 +8,8 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
+    // Using token-based auth, not session cookies
+    withCredentials: false,
 });
 
 // Add token to requests
@@ -43,40 +45,64 @@ export const authService = {
         api.post('/register', data),
     logout: () =>
         api.post('/logout'),
-    getCurrentUser: () =>
-        api.get('/user'),
+    getProfile: () =>
+        api.get('/profile'),
+    updateProfile: (data) =>
+        api.put('/profile', data),
 };
 
-// User/Animal Services
-export const animalService = {
+// Dashboard Services
+export const dashboardService = {
+    getFarmerDashboard: () =>
+        api.get('/dashboard'),
+    getAdminDashboard: () =>
+        api.get('/admin/dashboard'),
+};
+
+// Insurance Application Services
+export const insuranceService = {
     getAll: () =>
-        api.get('/animals'),
+        api.get('/insurance-applications'),
     getById: (id) =>
-        api.get(`/animals/${id}`),
+        api.get(`/insurance-applications/${id}`),
     create: (data) =>
-        api.post('/animals', data),
+        api.post('/insurance-applications', data),
     update: (id, data) =>
-        api.put(`/animals/${id}`, data),
+        api.put(`/insurance-applications/${id}`, data),
     delete: (id) =>
-        api.delete(`/animals/${id}`),
+        api.delete(`/insurance-applications/${id}`),
+    getStatistics: () =>
+        api.get('/insurance-applications/stats/summary'),
+    // Admin actions
+    approve: (id, adminNotes) =>
+        api.post(`/admin/insurance-applications/${id}/approve`, { admin_notes: adminNotes }),
+    reject: (id, adminNotes) =>
+        api.post(`/admin/insurance-applications/${id}/reject`, { admin_notes: adminNotes }),
 };
 
-// Report Services
+// Disease Report Services
 export const reportService = {
     getAll: () =>
-        api.get('/reports'),
+        api.get('/disease-reports'),
     getById: (id) =>
-        api.get(`/reports/${id}`),
+        api.get(`/disease-reports/${id}`),
     create: (data) =>
-        api.post('/reports', data, {
+        api.post('/disease-reports', data, {
             headers: { 'Content-Type': 'multipart/form-data' },
         }),
     update: (id, data) =>
-        api.put(`/reports/${id}`, data),
+        api.put(`/disease-reports/${id}`, data),
     delete: (id) =>
-        api.delete(`/reports/${id}`),
-    markResolved: (id) =>
-        api.patch(`/reports/${id}/resolve`, {}),
+        api.delete(`/disease-reports/${id}`),
+    getMapData: () =>
+        api.get('/disease-reports/map/data'),
+    getStatistics: () =>
+        api.get('/disease-reports/stats/summary'),
+    // Admin actions
+    investigate: (id, adminNotes) =>
+        api.post(`/admin/disease-reports/${id}/investigate`, { admin_notes: adminNotes }),
+    resolve: (id, adminNotes) =>
+        api.post(`/admin/disease-reports/${id}/resolve`, { admin_notes: adminNotes }),
 };
 
 // Advisory Services
@@ -85,36 +111,33 @@ export const advisoryService = {
         api.get('/advisories'),
     getById: (id) =>
         api.get(`/advisories/${id}`),
+    markAsRead: (id) =>
+        api.post(`/advisories/${id}/read`),
+    getUnreadCount: () =>
+        api.get('/advisories/unread/count'),
+    // Admin actions
     create: (data) =>
-        api.post('/advisories', data),
+        api.post('/admin/advisories', data),
     update: (id, data) =>
-        api.put(`/advisories/${id}`, data),
+        api.put(`/admin/advisories/${id}`, data),
     delete: (id) =>
-        api.delete(`/advisories/${id}`),
+        api.delete(`/admin/advisories/${id}`),
 };
 
-// User Management Services (Admin)
-export const userService = {
-    getAll: () =>
-        api.get('/users'),
-    getById: (id) =>
-        api.get(`/users/${id}`),
-    update: (id, data) =>
-        api.put(`/users/${id}`, data),
-    delete: (id) =>
-        api.delete(`/users/${id}`),
-    getStats: () =>
-        api.get('/users/stats'),
-};
-
-// Analytics Services (Admin)
-export const analyticsService = {
-    getDashboardStats: () =>
-        api.get('/analytics/dashboard'),
-    getReportsTrend: (days = 30) =>
-        api.get(`/analytics/reports-trend?days=${days}`),
-    getAnimalStats: () =>
-        api.get('/analytics/animals'),
-    exportReports: (format = 'pdf') =>
-        api.get(`/analytics/export?format=${format}`),
+// Reference Data Services
+export const referenceService = {
+    getBarangays: () =>
+        api.get('/reference/barangays'),
+    getAnimalTypes: () =>
+        api.get('/reference/animal-types'),
+    getAnimalPurposes: () =>
+        api.get('/reference/animal-purposes'),
+    getDiseases: () =>
+        api.get('/reference/diseases'),
+    getDiseaseCategories: () =>
+        api.get('/reference/disease-categories'),
+    getAdvisoryCategories: () =>
+        api.get('/reference/advisory-categories'),
+    getAdvisorySeverities: () =>
+        api.get('/reference/advisory-severities'),
 };

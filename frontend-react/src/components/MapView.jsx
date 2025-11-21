@@ -56,30 +56,50 @@ const pulsingDotIcon = L.divIcon({
     popupAnchor: [0, -11]
 });
 
-const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMarkerClick, markerType = 'default' }) => {
+const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMarkerClick, onMapClick, markerType = 'default' }) => {
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
+    const markersLayerRef = useRef(null);
 
+    // Initialize map only once
     useEffect(() => {
-        // Only initialize if map doesn't exist
         if (!mapInstanceRef.current && mapRef.current) {
             mapInstanceRef.current = L.map(mapRef.current).setView(center, zoom);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(mapInstanceRef.current);
+
+            // Create a layer group for markers
+            markersLayerRef.current = L.layerGroup().addTo(mapInstanceRef.current);
+
+            // Add click handler if onMapClick is provided
+            if (onMapClick) {
+                mapInstanceRef.current.on('click', (e) => {
+                    onMapClick(e.latlng.lat, e.latlng.lng);
+                });
+            }
         }
 
-        // Update markers
-        if (mapInstanceRef.current) {
-            // Clear existing markers
-            mapInstanceRef.current.eachLayer((layer) => {
-                if (layer instanceof L.Marker) {
-                    mapInstanceRef.current.removeLayer(layer);
-                }
-            });
+        // Cleanup function - only remove on component unmount
+        return () => {
+            if (mapInstanceRef.current) {
+                mapInstanceRef.current.remove();
+                mapInstanceRef.current = null;
+                markersLayerRef.current = null;
+            }
+        };
+    }, []);
 
-            // Add new markers with click event
+    // Update markers when they change
+    useEffect(() => {
+        if (mapInstanceRef.current && markersLayerRef.current) {
+            // Clear existing markers
+            markersLayerRef.current.clearLayers();
+
+            console.log('Adding markers to map:', markers.length);
+
+            // Add new markers
             markers.forEach((marker) => {
                 // Select icon based on markerType
                 let icon;
@@ -90,8 +110,7 @@ const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMark
                 }
 
                 const markerOptions = icon ? { icon } : {};
-                const mapMarker = L.marker([marker.lat, marker.lng], markerOptions)
-                    .addTo(mapInstanceRef.current);
+                const mapMarker = L.marker([marker.lat, marker.lng], markerOptions);
 
                 // Add popup with basic info
                 const popupContent = `
@@ -111,17 +130,18 @@ const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMark
                         onMarkerClick(marker);
                     });
                 }
-            });
-        }
 
-        // Cleanup function
-        return () => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove();
-                mapInstanceRef.current = null;
+                // Add marker to layer group
+                mapMarker.addTo(markersLayerRef.current);
+            });
+
+            // Adjust map view to fit all markers if there are any
+            if (markers.length > 0) {
+                const bounds = L.latLngBounds(markers.map(m => [m.lat, m.lng]));
+                mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
             }
-        };
-    }, [markers, center, zoom]);
+        }
+    }, [markers, markerType, onMarkerClick]);
 
     return (
         <div

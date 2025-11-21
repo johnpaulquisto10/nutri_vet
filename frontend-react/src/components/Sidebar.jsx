@@ -30,11 +30,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     path: '/admin/dashboard',
                 },
                 {
-                    label: 'Users',
-                    icon: UsersIcon,
-                    path: '/admin/users',
-                },
-                {
                     label: 'Reports',
                     icon: DocumentTextIcon,
                     path: '/admin/reports',
@@ -67,7 +62,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     path: '/user/dashboard',
                 },
                 {
-                    label: 'Livestock',
+                    label: 'Insured Animals',
                     icon: BoltIcon,
                     path: '/user/animals',
                 },

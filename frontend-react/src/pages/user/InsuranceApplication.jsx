@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import BottomNav from '../../components/BottomNav';
 import toast from 'react-hot-toast';
+import { insuranceService, referenceService } from '../../services/api';
 
 const InsuranceApplication = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [myApplications, setMyApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [barangays, setBarangays] = useState([]);
+    const [animalTypes, setAnimalTypes] = useState([]);
+    const [purposes, setPurposes] = useState([]);
     const [formData, setFormData] = useState({
         farmerName: '',
         barangay: '',
@@ -24,46 +30,47 @@ const InsuranceApplication = () => {
         female: ''
     });
 
-    const barangays = [
-        'Alcadesma',
-        'Bagong Silang',
-        'Bangero',
-        'Bato',
-        'Bulo',
-        'Conrazon',
-        'Dayhagan',
-        'Malo',
-        'Manihala',
-        'Pag-asa',
-        'Poblacion',
-        'Proper Bansud',
-        'Rosacara',
-        'Salcedo',
-        'Santo Niño',
-        'Sumagui',
-        'Villa Pag-asa'
-    ];
+    useEffect(() => {
+        fetchApplications();
+        fetchReferenceData();
+    }, []);
 
-    const animalTypes = [
-        { value: 'cattle', label: 'Cattle' },
-        { value: 'carabao', label: 'Carabao' },
-        { value: 'swine', label: 'Swine' },
-        { value: 'poultry', label: 'Poultry' },
-        { value: 'horse', label: 'Horse' },
-        { value: 'goat', label: 'Goat' },
-        { value: 'other', label: 'Other' }
-    ];
+    const fetchReferenceData = async () => {
+        try {
+            const [barangaysRes, animalTypesRes, purposesRes] = await Promise.all([
+                referenceService.getBarangays(),
+                referenceService.getAnimalTypes(),
+                referenceService.getAnimalPurposes()
+            ]);
 
-    const purposes = [
-        { value: 'fattening', label: 'Fattening' },
-        { value: 'draft', label: 'Draft' },
-        { value: 'broilers', label: 'Broilers' },
-        { value: 'pullets', label: 'Pullets' },
-        { value: 'breeding', label: 'Breeding' },
-        { value: 'dairy', label: 'Dairy' },
-        { value: 'layers', label: 'Layers' },
-        { value: 'parent_stock', label: 'Parent Stock' }
-    ];
+            setBarangays(barangaysRes.data || []);
+            setAnimalTypes(animalTypesRes.data || []);
+            setPurposes(purposesRes.data || []);
+        } catch (error) {
+            console.error('Error loading reference data:', error);
+            toast.error('Failed to load form data');
+        }
+    };
+
+    const fetchApplications = async () => {
+        try {
+            console.log('📥 User: Fetching my applications...');
+            const response = await insuranceService.getAll();
+            console.log('✅ User: Received response:', response.data);
+
+            // Handle paginated response
+            const applicationsData = response.data.data || response.data;
+            console.log('📊 User: My applications count:', applicationsData.length);
+
+            setMyApplications(Array.isArray(applicationsData) ? applicationsData : []);
+        } catch (error) {
+            console.error('❌ User: Error fetching applications:', error);
+            console.error('Error details:', error.response?.data);
+            toast.error('Failed to load your applications');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -89,21 +96,39 @@ const InsuranceApplication = () => {
         }
 
         try {
-            // Here you would typically send to backend API
-            // For now, we'll store in localStorage
-            const applications = JSON.parse(localStorage.getItem('insuranceApplications') || '[]');
-            const newApplication = {
-                id: Date.now(),
-                ...formData,
-                status: 'pending',
-                submittedAt: new Date().toISOString(),
-                animalTypeDisplay: formData.animalType === 'other' ? formData.animalTypeOther :
-                    animalTypes.find(t => t.value === formData.animalType)?.label
-            };
-            applications.push(newApplication);
-            localStorage.setItem('insuranceApplications', JSON.stringify(applications));
+            console.log('📤 Submitting insurance application...');
 
-            toast.success('Application submitted successfully!');
+            // Submit to backend API
+            const submitData = {
+                animal_type_id: parseInt(formData.animalType),
+                animal_type_other: formData.animalTypeOther || null,
+                purpose_id: parseInt(formData.purpose),
+                barangay_id: parseInt(formData.barangay),
+                contact_number: formData.contactNumber,
+                number_of_heads: parseInt(formData.numberOfHeads),
+                age_months: parseInt(formData.age) || 0,
+                breed: formData.breed || null,
+                basic_color: formData.basicColor || null,
+                male_count: parseInt(formData.male) || 0,
+                female_count: parseInt(formData.female) || 0,
+            };
+
+            console.log('📋 Submission data:', submitData);
+            const response = await insuranceService.create(submitData);
+            console.log('✅ Application submitted successfully!', response.data);
+
+            // Show success notification with details
+            toast.success(
+                `🎉 Insurance application submitted successfully!\n` +
+                `Application ID: ${response.data.application?.application_id || 'Pending'}\n` +
+                `Status: ${response.data.application?.status?.status_name || 'Pending'}\n` +
+                `Admin will review your application soon.`,
+                { duration: 5000 }
+            );
+
+            // Reload applications to show the new one
+            console.log('🔄 Reloading applications list...');
+            await fetchApplications();
 
             // Reset form
             setFormData({
@@ -123,8 +148,18 @@ const InsuranceApplication = () => {
                 female: ''
             });
         } catch (error) {
-            toast.error('Failed to submit application');
-            console.error(error);
+            console.error('❌ Failed to submit application:', error);
+            console.error('Error response:', error.response?.data);
+
+            // Detailed error message
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Failed to submit application. Please try again.';
+
+            toast.error(
+                `❌ Submission Failed\n${errorMessage}`,
+                { duration: 5000 }
+            );
         }
     };
 
@@ -188,8 +223,8 @@ const InsuranceApplication = () => {
                                                 >
                                                     <option value="" className="text-gray-900 bg-white">Select Barangay</option>
                                                     {barangays.map(barangay => (
-                                                        <option key={barangay} value={barangay} className="text-gray-900 bg-white">
-                                                            {barangay}
+                                                        <option key={barangay.barangay_id} value={barangay.barangay_id} className="text-gray-900 bg-white">
+                                                            {barangay.barangay_name}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -243,17 +278,23 @@ const InsuranceApplication = () => {
                                     </h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         {animalTypes.map(type => (
-                                            <label key={type.value} className="flex items-center space-x-2 cursor-pointer">
+                                            <label
+                                                key={type.animal_type_id}
+                                                className={`flex items-center space-x-2 cursor-pointer p-3 border-2 rounded-lg transition-all ${formData.animalType == type.animal_type_id
+                                                    ? 'border-primary-600 bg-primary-50'
+                                                    : 'border-gray-200 hover:border-primary-300 bg-white'
+                                                    }`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="animalType"
-                                                    value={type.value}
-                                                    checked={formData.animalType === type.value}
+                                                    value={type.animal_type_id}
+                                                    checked={formData.animalType == type.animal_type_id}
                                                     onChange={handleInputChange}
-                                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                                    className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-primary-500 focus:ring-2"
                                                     required
                                                 />
-                                                <span className="text-sm text-gray-700">{type.label}</span>
+                                                <span className="text-sm font-medium text-gray-700">{type.animal_type_name}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -280,17 +321,23 @@ const InsuranceApplication = () => {
                                     </h3>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         {purposes.map(purpose => (
-                                            <label key={purpose.value} className="flex items-center space-x-2 cursor-pointer">
+                                            <label
+                                                key={purpose.purpose_id}
+                                                className={`flex items-center space-x-2 cursor-pointer p-3 border-2 rounded-lg transition-all ${formData.purpose == purpose.purpose_id
+                                                    ? 'border-primary-600 bg-primary-50'
+                                                    : 'border-gray-200 hover:border-primary-300 bg-white'
+                                                    }`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="purpose"
-                                                    value={purpose.value}
-                                                    checked={formData.purpose === purpose.value}
+                                                    value={purpose.purpose_id}
+                                                    checked={formData.purpose == purpose.purpose_id}
                                                     onChange={handleInputChange}
-                                                    className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                                                    className="w-5 h-5 text-primary-600 border-gray-300 focus:ring-primary-500 focus:ring-2"
                                                     required
                                                 />
-                                                <span className="text-sm text-gray-700">{purpose.label}</span>
+                                                <span className="text-sm font-medium text-gray-700">{purpose.purpose_name}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -405,6 +452,54 @@ const InsuranceApplication = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+
+                        {/* My Applications Section */}
+                        <div className="bg-white rounded-2xl shadow-card p-6 mt-6">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4">My Applications</h2>
+
+                            {loading ? (
+                                <p className="text-gray-500">Loading applications...</p>
+                            ) : myApplications.length === 0 ? (
+                                <p className="text-gray-500">No applications submitted yet.</p>
+                            ) : (
+                                <div className="space-y-4">
+                                    {myApplications.map((app) => (
+                                        <div key={app.application_id} className="border border-gray-200 rounded-lg p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="font-medium text-gray-900">
+                                                        {(app.animal_type || app.animalType)?.animal_type_name || 'Other'}
+                                                        {app.animal_type_other && ` (${app.animal_type_other})`}
+                                                    </p>
+                                                    <p className="text-sm text-gray-500">
+                                                        {app.number_of_heads || 0} heads • {app.purpose?.purpose_name || 'N/A'}
+                                                    </p>
+                                                </div>
+                                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${app.status?.status_name === 'Approved'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : app.status?.status_name === 'Rejected'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
+                                                    }`}>
+                                                    {app.status?.status_name || 'Pending'}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-600">
+                                                Barangay: {app.barangay?.barangay_name}
+                                            </p>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                Submitted: {new Date(app.submitted_at).toLocaleDateString()}
+                                            </p>
+                                            {app.admin_notes && (
+                                                <p className="text-sm text-gray-600 mt-2 p-2 bg-gray-50 rounded">
+                                                    <strong>Admin Notes:</strong> {app.admin_notes}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </main>

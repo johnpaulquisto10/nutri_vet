@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-User Data Isolation Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .test-section h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+
+        .user-box {
+            display: inline-block;
+            width: calc(33.333% - 20px);
+            margin: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            vertical-align: top;
+        }
+
+        .user-box h4 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .log {
+            background: #2d3748;
+            color: #48bb78;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #48bb78;
+            padding-left: 10px;
+        }
+
+        .log-error {
+            border-left-color: #f56565;
+            color: #f56565;
+        }
+
+        .log-success {
+            border-left-color: #48bb78;
+            color: #48bb78;
+        }
+
+        .log-info {
+            border-left-color: #4299e1;
+            color: #4299e1;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-pass {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-fail {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧪 Multi-User Data Isolation Test</h1>
+        <p class="subtitle">Verify that different farmers see ONLY their own data</p>
+
+        <div class="controls">
+            <button onclick="runFullTest()">🚀 Run Complete Test</button>
+            <button onclick="clearLog()">🗑️ Clear Log</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div id="users-container"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Test Log</h3>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        let testUsers = [];
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function registerUser(name, email, phone) {
+            log(`Registering user: ${name}`, 'info');
+
+            const response = await fetch(`${API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    full_name: name,
+                    email: email,
+                    password: 'password123',
+                    password_confirmation: 'password123',
+                    phone_number: phone
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                log(`✅ User registered: ${name} (ID: ${data.user.id})`, 'success');
+                return {
+                    name: name,
+                    email: email,
+                    token: data.token,
+                    userId: data.user.id,
+                    role: data.role
+                };
+            } else {
+                log(`❌ Registration failed for ${name}: ${data.message}`, 'error');
+                throw new Error(data.message);
+            }
+        }
+
+        async function submitInsuranceApplication(user) {
+            log(`${user.name}: Submitting insurance application...`, 'info');
+
+            const response = await fetch(`${API_URL}/insurance-applications`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    animal_type_id: 1,
+                    animal_count: Math.floor(Math.random() * 10) + 1,
+                    purpose_id: 1,
+                    barangay_id: 1
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                log(`✅ ${user.name}: Application submitted (ID: ${data.application.application_id})`, 'success');
+                return data.application;
+            } else {
+                log(`❌ ${user.name}: Application failed: ${data.message}`, 'error');
+                throw new Error(data.message);
+            }
+        }
+
+        async function submitDiseaseReport(user) {
+            log(`${user.name}: Submitting disease report...`, 'info');
+
+            const response = await fetch(`${API_URL}/disease-reports`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user.token}`
+                },
+                body: JSON.stringify({
+                    animal_name: `Animal ${Math.random().toString(36).substring(7)}`,
+                    disease_type: 'Test Disease',
+                    symptoms: 'Testing symptoms',
+                    location: 'Test Location',
+                    latitude: 13.4123,
+                    longitude: 121.1234
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                log(`✅ ${user.name}: Report submitted (ID: ${data.report.report_id})`, 'success');
+                return data.report;
+            } else {
+                log(`❌ ${user.name}: Report failed: ${data.message}`, 'error');
+                throw new Error(data.message);
+            }
+        }
+
+        async function getDashboardStats(user) {
+            const response = await fetch(`${API_URL}/dashboard/farmer`, {
+                headers: {
+                    'Authorization': `Bearer ${user.token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                return data;
+            } else {
+                throw new Error(data.message);
+            }
+        }
+
+        function displayUserStats(user, stats) {
+            const container = document.getElementById('users-container');
+
+            let userBox = document.getElementById(`user-${user.userId}`);
+            if (!userBox) {
+                userBox = document.createElement('div');
+                userBox.id = `user-${user.userId}`;
+                userBox.className = 'user-box';
+                container.appendChild(userBox);
+            }
+
+            userBox.innerHTML = `
+                <h4>${user.name}</h4>
+                <div class="stat">
+                    <span class="stat-label">User ID</span>
+                    <span class="stat-value">${user.userId}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Email</span>
+                    <span class="stat-value">${user.email}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Applications</span>
+                    <span class="stat-value">${stats.totalApplications || 0}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Pending Applications</span>
+                    <span class="stat-value">${stats.pendingApplications || 0}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Total Reports</span>
+                    <span class="stat-value">${stats.totalReports || 0}</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Active Reports</span>
+                    <span class="stat-value">${stats.activeReports || 0}</span>
+                </div>
+            `;
+        }
+
+        async function runFullTest() {
+            try {
+                clearLog();
+                document.getElementById('users-container').innerHTML = '';
+                testUsers = [];
+
+                log('🚀 Starting Multi-User Data Isolation Test...', 'info');
+                log('', 'info');
+
+                // Step 1: Register 3 farmers
+                log('═══════════════════════════════════════', 'info');
+                log('STEP 1: Registering 3 Farmers', 'info');
+                log('═══════════════════════════════════════', 'info');
+
+                const timestamp = Date.now();
+                const user1 = await registerUser(
+                    'Juan Dela Cruz',
+                    `juan${timestamp}@test.com`,
+                    '09171234567'
+                );
+                testUsers.push(user1);
+
+                const user2 = await registerUser(
+                    'Maria Santos',
+                    `maria${timestamp}@test.com`,
+                    '09187654321'
+                );
+                testUsers.push(user2);
+
+                const user3 = await registerUser(
+                    'Pedro Reyes',
+                    `pedro${timestamp}@test.com`,
+                    '09191234567'
+                );
+                testUsers.push(user3);
+
+                log('', 'info');
+                log('═══════════════════════════════════════', 'info');
+                log('STEP 2: Verifying Empty Dashboards', 'info');
+                log('═══════════════════════════════════════', 'info');
+
+                for (const user of testUsers) {
+                    const stats = await getDashboardStats(user);
+                    displayUserStats(user, stats);
+                    log(`${user.name}: Apps=${stats.totalApplications}, Reports=${stats.totalReports}`,
+                        stats.totalApplications === 0 && stats.totalReports === 0 ? 'success' : 'error');
+                }
+
+                log('', 'info');
+                log('═══════════════════════════════════════', 'info');
+                log('STEP 3: Submitting Test Data', 'info');
+                log('═══════════════════════════════════════', 'info');
+
+                // User 1: 2 applications
+                await submitInsuranceApplication(user1);
+                await submitInsuranceApplication(user1);
+
+                // User 2: 1 application, 1 report
+                await submitInsuranceApplication(user2);
+                await submitDiseaseReport(user2);
+
+                // User 3: 2 reports
+                await submitDiseaseReport(user3);
+                await submitDiseaseReport(user3);
+
+                log('', 'info');
+                log('═══════════════════════════════════════', 'info');
+                log('STEP 4: Verifying Data Isolation', 'info');
+                log('═══════════════════════════════════════', 'info');
+
+                // Verify each user sees only their data
+                const stats1 = await getDashboardStats(user1);
+                displayUserStats(user1, stats1);
+                const test1Pass = stats1.totalApplications === 2 && stats1.totalReports === 0;
+                log(`${user1.name}: Expected (Apps=2, Reports=0), Got (Apps=${stats1.totalApplications}, Reports=${stats1.totalReports})`,
+                    test1Pass ? 'success' : 'error');
+
+                const stats2 = await getDashboardStats(user2);
+                displayUserStats(user2, stats2);
+                const test2Pass = stats2.totalApplications === 1 && stats2.totalReports === 1;
+                log(`${user2.name}: Expected (Apps=1, Reports=1), Got (Apps=${stats2.totalApplications}, Reports=${stats2.totalReports})`,
+                    test2Pass ? 'success' : 'error');
+
+                const stats3 = await getDashboardStats(user3);
+                displayUserStats(user3, stats3);
+                const test3Pass = stats3.totalApplications === 0 && stats3.totalReports === 2;
+                log(`${user3.name}: Expected (Apps=0, Reports=2), Got (Apps=${stats3.totalApplications}, Reports=${stats3.totalReports})`,
+                    test3Pass ? 'success' : 'error');
+
+                log('', 'info');
+                log('═══════════════════════════════════════', 'info');
+                const allTestsPassed = test1Pass && test2Pass && test3Pass;
+                log(allTestsPassed ? '✅ ALL TESTS PASSED! Data isolation is working correctly!' : '❌ SOME TESTS FAILED! Check the logs above.',
+                    allTestsPassed ? 'success' : 'error');
+                log('═══════════════════════════════════════', 'info');
+
+            } catch (error) {
+                log(`💥 Test failed with error: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Auto-run on load
+        log('🎯 Multi-User Data Isolation Test Ready', 'info');
+        log('Click "Run Complete Test" to verify data isolation', 'info');
+    </script>
+</body>
+
+</html>

@@ -50,10 +50,10 @@ const Navbar = ({ toggleSidebar }) => {
                                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                             >
                                 <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                                    {getInitials(user?.name || 'User')}
+                                    {getInitials(user?.full_name || user?.name || 'User')}
                                 </div>
                                 <div className="hidden sm:block text-left">
-                                    <p className="text-sm font-medium text-gray-800">{user?.name}</p>
+                                    <p className="text-sm font-medium text-gray-800">{user?.full_name || user?.name || 'User'}</p>
                                     <p className="text-xs text-gray-500 capitalize">{role}</p>
                                 </div>
                             </button>

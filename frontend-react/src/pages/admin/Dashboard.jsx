@@ -24,70 +24,44 @@ import {
     Legend,
     ResponsiveContainer,
 } from 'recharts';
+import toast from 'react-hot-toast';
+import { dashboardService } from '../../services/api';
 
 const AdminDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [stats, setStats] = useState({
-        totalUsers: 156,
-        totalAnimals: 892,
-        totalReports: 342,
-        activeAdvisories: 5,
+        total_farmers: 0,
+        total_applications: 0,
+        approved_applications: 0,
+        rejected_applications: 0,
+        total_reports: 0,
+        submitted_reports: 0,
+        investigating_reports: 0,
+        resolved_reports: 0,
+        active_advisories: 0,
     });
-
-    const [insuranceApplications, setInsuranceApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Load insurance applications from localStorage
-        const applications = JSON.parse(localStorage.getItem('insuranceApplications') || '[]');
-        setInsuranceApplications(applications);
+        fetchDashboardData();
     }, []);
 
-    const [chartData] = useState([
-        { month: 'Jan', reports: 45, resolved: 42 },
-        { month: 'Feb', reports: 52, resolved: 48 },
-        { month: 'Mar', reports: 48, resolved: 45 },
-        { month: 'Apr', reports: 61, resolved: 56 },
-        { month: 'May', reports: 55, resolved: 52 },
-        { month: 'Jun', reports: 67, resolved: 65 },
-    ]);
+    const fetchDashboardData = async () => {
+        try {
+            const response = await dashboardService.getAdminDashboard();
+            const data = response.data;
+            setStats(data.statistics || data);
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const [animalData] = useState([
-        { type: 'Cattle', count: 456 },
-        { type: 'Goat', count: 234 },
-        { type: 'Pig', count: 145 },
-        { type: 'Poultry', count: 57 },
-    ]);
-
-    const [recentReports] = useState([
-        {
-            id: 1,
-            farmer: 'Juan Dela Cruz',
-            disease: 'Foot and Mouth Disease',
-            date: '2025-11-10',
-            status: 'pending',
-        },
-        {
-            id: 2,
-            farmer: 'Maria Santos',
-            disease: 'Pneumonia',
-            date: '2025-11-09',
-            status: 'in-progress',
-        },
-        {
-            id: 3,
-            farmer: 'Pedro Lopez',
-            disease: 'Mastitis',
-            date: '2025-11-08',
-            status: 'resolved',
-        },
-        {
-            id: 4,
-            farmer: 'Ana Garcia',
-            disease: 'Avian Influenza',
-            date: '2025-11-07',
-            status: 'pending',
-        },
-    ]);
+    // Chart data will come from API in future enhancement
+    const chartData = stats.monthly_reports || [];
+    const animalData = stats.animal_statistics || [];
+    const recentReports = stats.recent_reports || [];
 
     return (
         <div className="flex flex-col h-screen bg-secondary-50">
@@ -112,38 +86,38 @@ const AdminDashboard = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                             <DashboardCard
                                 icon={Users}
-                                label="Total Users"
-                                value={stats.totalUsers}
-                                trend="12 new this month"
+                                label="Total Farmers"
+                                value={stats.total_farmers || 0}
+                                trend="Registered users"
                                 trendUp={true}
                             />
                             <DashboardCard
                                 icon={Zap}
-                                label="Total Livestock"
-                                value={stats.totalAnimals}
-                                trend="156 added"
+                                label="Total Applications"
+                                value={stats.total_applications || 0}
+                                trend={`${stats.approved_applications || 0} approved`}
                                 trendUp={true}
                             />
                             <DashboardCard
                                 icon={FileText}
                                 label="Disease Reports"
-                                value={stats.totalReports}
-                                trend="95% resolved"
+                                value={stats.total_reports || 0}
+                                trend={`${stats.resolved_reports || 0} resolved`}
                                 trendUp={true}
                             />
                             <DashboardCard
                                 icon={AlertCircle}
                                 label="Active Advisories"
-                                value={stats.activeAdvisories}
-                                trend="2 critical"
+                                value={stats.active_advisories || 0}
+                                trend="Health updates"
                                 trendUp={false}
                             />
                             <DashboardCard
                                 icon={ShieldCheck}
                                 label="Insurance Apps"
-                                value={insuranceApplications.length}
-                                trend={`${insuranceApplications.filter(a => a.status === 'pending').length} pending`}
-                                trendUp={insuranceApplications.filter(a => a.status === 'pending').length > 0}
+                                value={stats.total_applications || 0}
+                                trend={`${stats.approved_applications || 0} approved`}
+                                trendUp={(stats.approved_applications || 0) > 0}
                             />
                         </div>
 
@@ -230,40 +204,42 @@ const AdminDashboard = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {recentReports.map((report) => (
-                                            <tr
-                                                key={report.id}
-                                                className="border-b border-secondary-100 hover:bg-secondary-50"
-                                            >
-                                                <td className="px-4 py-3 text-secondary-700">
-                                                    {report.farmer}
-                                                </td>
-                                                <td className="px-4 py-3 text-secondary-700">
-                                                    {report.disease}
-                                                </td>
-                                                <td className="px-4 py-3 text-secondary-600">
-                                                    {new Date(report.date).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <span
-                                                        className={`px-2 py-1 rounded text-xs font-medium ${report.status === 'resolved'
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : report.status === 'in-progress'
-                                                                ? 'bg-blue-100 text-blue-700'
-                                                                : 'bg-yellow-100 text-yellow-700'
-                                                            }`}
-                                                    >
-                                                        {report.status
-                                                            .split('-')
-                                                            .map(
-                                                                (word) =>
-                                                                    word.charAt(0).toUpperCase() + word.slice(1)
-                                                            )
-                                                            .join(' ')}
-                                                    </span>
+                                        {recentReports.length > 0 ? (
+                                            recentReports.map((report) => (
+                                                <tr
+                                                    key={report.report_id || report.id}
+                                                    className="border-b border-secondary-100 hover:bg-secondary-50"
+                                                >
+                                                    <td className="px-4 py-3 text-secondary-700">
+                                                        {report.reporter?.full_name || report.farmer || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-secondary-700">
+                                                        {report.disease?.disease_name || report.disease_name_custom || report.disease || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-secondary-600">
+                                                        {new Date(report.submitted_at || report.date).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span
+                                                            className={`px-2 py-1 rounded text-xs font-medium ${(report.status?.status_name || report.status)?.toLowerCase() === 'resolved'
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : (report.status?.status_name || report.status)?.toLowerCase() === 'in progress'
+                                                                    ? 'bg-blue-100 text-blue-700'
+                                                                    : 'bg-yellow-100 text-yellow-700'
+                                                                }`}
+                                                        >
+                                                            {report.status?.status_name || report.status || 'Pending'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="4" className="px-4 py-8 text-center text-secondary-500">
+                                                    No recent reports
                                                 </td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -276,7 +252,7 @@ const AdminDashboard = () => {
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <a
-                                    href="/admin/users"
+                                    href="/admin/reports"
                                     className="p-4 bg-white rounded-lg border border-secondary-200 hover:border-primary-500 hover:shadow-card transition-all text-center"
                                 >
                                     <Users className="w-8 h-8 text-primary-600 mx-auto mb-2" />

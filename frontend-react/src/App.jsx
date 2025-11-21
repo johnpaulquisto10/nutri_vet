@@ -3,13 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import UserDashboard from './pages/user/Dashboard'
-import Animals from './pages/user/Animals'
+import InsuredAnimals from './pages/user/InsuredAnimals'
 import Reports from './pages/user/Reports'
 import Advisories from './pages/user/Advisories'
 import UserSettings from './pages/user/Settings'
 import InsuranceApplication from './pages/user/InsuranceApplication'
 import AdminDashboard from './pages/admin/Dashboard'
-import ManageUsers from './pages/admin/ManageUsers'
 import ManageReports from './pages/admin/ManageReports'
 import ManageAdvisories from './pages/admin/ManageAdvisories'
 import InteractiveMap from './pages/admin/InteractiveMap'
@@ -41,7 +40,7 @@ const App = () => {
         path="/user/animals"
         element={
           <RoleBasedRoute allowedRoles={["farmer"]}>
-            <Animals />
+            <InsuredAnimals />
           </RoleBasedRoute>
         }
       />
@@ -84,14 +83,6 @@ const App = () => {
         element={
           <RoleBasedRoute allowedRoles={["admin"]}>
             <AdminDashboard />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <RoleBasedRoute allowedRoles={["admin"]}>
-            <ManageUsers />
           </RoleBasedRoute>
         }
       />

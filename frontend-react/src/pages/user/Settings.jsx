@@ -1,19 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserIcon, BellIcon, ShieldCheckIcon, KeyIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import BottomNav from '../../components/BottomNav';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/api';
 
 const Settings = () => {
+    const { user } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [profile, setProfile] = useState({
-        name: 'Juan Dela Cruz',
-        email: 'farmer@example.com',
-        phone: '09123456789',
-        barangay: 'Proper Bansud',
-        sitio: 'Centro',
+        name: '',
+        email: '',
+        phone: '',
+        barangay: '',
+        sitio: '',
     });
+
+    useEffect(() => {
+        if (user) {
+            setProfile({
+                name: user.full_name || '',
+                email: user.email || '',
+                phone: user.phone_number || '',
+                barangay: user.barangay || '',
+                sitio: user.sitio || '',
+            });
+        }
+    }, [user]);
     const [notifications, setNotifications] = useState({
         emailAlerts: true,
         smsAlerts: false,
@@ -26,19 +41,38 @@ const Settings = () => {
         confirm: '',
     });
 
-    const handleProfileUpdate = (e) => {
+    const handleProfileUpdate = async (e) => {
         e.preventDefault();
-        toast.success('Profile updated successfully');
+        try {
+            await authService.updateProfile({
+                full_name: profile.name,
+                phone_number: profile.phone,
+            });
+            toast.success('Profile updated successfully');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            toast.error(error.response?.data?.message || 'Failed to update profile');
+        }
     };
 
-    const handlePasswordChange = (e) => {
+    const handlePasswordChange = async (e) => {
         e.preventDefault();
         if (password.new !== password.confirm) {
             toast.error('New passwords do not match');
             return;
         }
-        toast.success('Password changed successfully');
-        setPassword({ current: '', new: '', confirm: '' });
+        try {
+            await authService.updateProfile({
+                current_password: password.current,
+                password: password.new,
+                password_confirmation: password.confirm,
+            });
+            toast.success('Password changed successfully');
+            setPassword({ current: '', new: '', confirm: '' });
+        } catch (error) {
+            console.error('Error changing password:', error);
+            toast.error(error.response?.data?.message || 'Failed to change password');
+        }
     };
 
     const handleNotificationToggle = (key) => {

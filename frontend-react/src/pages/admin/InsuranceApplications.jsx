@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { DocumentTextIcon, CheckCircleIcon, XCircleIcon, ClockIcon, MagnifyingGlassIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, CheckCircleIcon, XCircleIcon, ClockIcon, MagnifyingGlassIcon, EyeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import toast from 'react-hot-toast';
+import { insuranceService } from '../../services/api';
 
 const InsuranceApplications = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -12,30 +13,104 @@ const InsuranceApplications = () => {
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [adminNotes, setAdminNotes] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
     const itemsPerPage = 10;
 
     useEffect(() => {
         loadApplications();
-    }, []);
 
-    const loadApplications = () => {
-        const storedApplications = JSON.parse(localStorage.getItem('insuranceApplications') || '[]');
-        setApplications(storedApplications);
+        // Auto-refresh every 30 seconds to show new applications
+        const interval = setInterval(() => {
+            loadApplications(true); // silent refresh with notification check
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [applications.length]); // Re-run when applications count changes
+
+    const loadApplications = async (silent = false, checkForNew = false) => {
+        try {
+            if (!silent) setLoading(true);
+            console.log('🔄 Admin: Fetching insurance applications from API...');
+
+            const response = await insuranceService.getAll();
+            console.log('📥 Admin: API Response received');
+            console.log('🔍 Admin: Full API response:', response.data);
+
+            // Handle paginated response
+            const applicationsData = response.data.data || response.data;
+            const newCount = applicationsData.length;
+            const oldCount = applications.length;
+
+            console.log('📊 Admin: Applications count - Old:', oldCount, 'New:', newCount);
+            if (applicationsData.length > 0) {
+                console.log('🔍 Admin: First application sample:', applicationsData[0]);
+                console.log('🔍 Admin: AnimalType data:', applicationsData[0]?.animalType);
+            }
+
+            // Check for new applications
+            if (checkForNew && newCount > oldCount) {
+                const newAppsCount = newCount - oldCount;
+                toast.success(
+                    `🔔 ${newAppsCount} new insurance application${newAppsCount > 1 ? 's' : ''} received!`,
+                    {
+                        duration: 6000,
+                        icon: '🆕'
+                    }
+                );
+                console.log(`✅ Admin: ${newAppsCount} new applications detected!`);
+            }
+
+            setApplications(Array.isArray(applicationsData) ? applicationsData : []);
+
+            if (!silent && !checkForNew) {
+                toast.success(`Loaded ${newCount} insurance applications`);
+            }
+
+            console.log('✅ Admin: Applications loaded successfully');
+        } catch (error) {
+            console.error('❌ Admin: Error fetching applications:', error);
+            console.error('Error details:', error.response?.data);
+            if (!silent) {
+                toast.error(
+                    'Failed to load applications. Please check your connection.',
+                    { duration: 4000 }
+                );
+            }
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
     };
 
-    const handleStatusUpdate = (id, newStatus) => {
-        const updatedApplications = applications.map(app =>
-            app.id === id ? { ...app, status: newStatus } : app
-        );
-        setApplications(updatedApplications);
-        localStorage.setItem('insuranceApplications', JSON.stringify(updatedApplications));
+    const handleManualRefresh = async () => {
+        setRefreshing(true);
+        console.log('🔄 Admin: Manual refresh triggered');
+        await loadApplications(false, true); // not silent, check for new
+        toast.success('✅ Applications refreshed successfully!');
+    };
 
-        const statusText = newStatus === 'approved' ? 'approved' : 'rejected';
-        toast.success(`Application ${statusText} successfully`);
+    const handleStatusUpdate = async (id, newStatus) => {
+        try {
+            if (newStatus === 'approved') {
+                await insuranceService.approve(id, adminNotes);
+            } else {
+                await insuranceService.reject(id, adminNotes);
+            }
 
-        if (showModal) {
-            setShowModal(false);
-            setSelectedApplication(null);
+            const statusText = newStatus === 'approved' ? 'approved' : 'rejected';
+            toast.success(`Application ${statusText} successfully`);
+
+            if (showModal) {
+                setShowModal(false);
+                setSelectedApplication(null);
+                setAdminNotes('');
+            }
+            loadApplications();
+        } catch (error) {
+            console.error('Error updating application:', error);
+            toast.error('Failed to update application');
         }
     };
 
@@ -46,10 +121,16 @@ const InsuranceApplications = () => {
 
     // Filter and search
     const filteredApplications = applications.filter(app => {
-        const matchesSearch = app.farmerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            app.barangay.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            app.animalTypeDisplay?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = filterStatus === 'all' || app.status === filterStatus;
+        const farmerName = app.applicant?.full_name || '';
+        const barangay = app.barangay?.barangay_name || '';
+        // Laravel returns snake_case, not camelCase
+        const animalType = (app.animal_type || app.animalType)?.animal_type_name || '';
+        const status = (app.status?.status_name || 'pending').toLowerCase();
+
+        const matchesSearch = farmerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            barangay.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            animalType.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = filterStatus === 'all' || status === filterStatus;
         return matchesSearch && matchesStatus;
     });
 
@@ -99,15 +180,46 @@ const InsuranceApplications = () => {
                     <div className="p-4 sm:p-6 lg:p-8">
                         {/* Header */}
                         <div className="mb-8">
-                            <div className="flex items-center gap-3 mb-2">
-                                <DocumentTextIcon className="w-8 h-8 text-primary-600" />
-                                <h1 className="text-3xl font-bold text-secondary-900">
-                                    Insurance Applications
-                                </h1>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <DocumentTextIcon className="w-8 h-8 text-primary-600" />
+                                        <h1 className="text-3xl font-bold text-secondary-900">
+                                            Insurance Applications
+                                        </h1>
+                                    </div>
+                                    <p className="text-secondary-600 mt-1">
+                                        Manage livestock mortality insurance applications • Auto-refreshes every 30s
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={handleManualRefresh}
+                                    disabled={refreshing}
+                                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+                                >
+                                    <ArrowPathIcon className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+                                    Refresh
+                                </button>
                             </div>
-                            <p className="text-secondary-600 mt-1">
-                                Manage livestock mortality insurance applications
-                            </p>
+                        </div>
+
+                        {/* Status Summary */}
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-blue-800">
+                                        Database Status: {applications.length} Total Applications
+                                    </p>
+                                    <p className="text-xs text-blue-600 mt-1">
+                                        Pending: {applications.filter(a => a.status?.status_name === 'Pending').length} |
+                                        Approved: {applications.filter(a => a.status?.status_name === 'Approved').length} |
+                                        Rejected: {applications.filter(a => a.status?.status_name === 'Rejected').length}
+                                    </p>
+                                </div>
+                                <div className="text-xs text-blue-600">
+                                    Last updated: {new Date().toLocaleTimeString()}
+                                </div>
+                            </div>
                         </div>
 
                         {/* Filters */}
@@ -178,25 +290,25 @@ const InsuranceApplications = () => {
                                             </tr>
                                         ) : (
                                             paginatedApplications.map((app) => (
-                                                <tr key={app.id} className="hover:bg-gray-50">
+                                                <tr key={app.application_id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="font-medium text-gray-900">{app.farmerName}</div>
-                                                        <div className="text-sm text-gray-500">{app.contactNumber}</div>
+                                                        <div className="font-medium text-gray-900">{app.applicant?.full_name || 'N/A'}</div>
+                                                        <div className="text-sm text-gray-500">{app.contact_number || 'N/A'}</div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {app.barangay}, {app.municipality}
+                                                        {app.barangay?.barangay_name || 'N/A'}, {app.barangay?.municipality?.municipality_name || 'N/A'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {app.animalTypeDisplay}
+                                                        {(app.animal_type || app.animalType)?.animal_type_name || 'N/A'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {app.numberOfHeads}
+                                                        {app.number_of_heads || 0}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {formatDate(app.submittedAt)}
+                                                        {formatDate(app.submitted_at)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        {getStatusBadge(app.status)}
+                                                        {getStatusBadge((app.status?.status_name || 'pending').toLowerCase())}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                         <button
@@ -205,17 +317,17 @@ const InsuranceApplications = () => {
                                                         >
                                                             <EyeIcon className="w-5 h-5 inline" />
                                                         </button>
-                                                        {app.status === 'pending' && (
+                                                        {(app.status?.status_name || 'pending').toLowerCase() === 'pending' && (
                                                             <>
                                                                 <button
-                                                                    onClick={() => handleStatusUpdate(app.id, 'approved')}
+                                                                    onClick={() => handleStatusUpdate(app.application_id, 'approved')}
                                                                     className="text-green-600 hover:text-green-900"
                                                                     title="Approve"
                                                                 >
                                                                     <CheckCircleIcon className="w-5 h-5 inline" />
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleStatusUpdate(app.id, 'rejected')}
+                                                                    onClick={() => handleStatusUpdate(app.application_id, 'rejected')}
                                                                     className="text-red-600 hover:text-red-900"
                                                                     title="Reject"
                                                                 >
@@ -294,16 +406,16 @@ const InsuranceApplications = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-sm text-gray-600">Name</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.farmerName}</p>
+                                            <p className="font-medium text-gray-900">{selectedApplication.applicant?.full_name || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Contact Number</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.contactNumber}</p>
+                                            <p className="font-medium text-gray-900">{selectedApplication.contact_number || 'N/A'}</p>
                                         </div>
                                         <div className="col-span-2">
                                             <p className="text-sm text-gray-600">Address</p>
                                             <p className="font-medium text-gray-900">
-                                                {selectedApplication.barangay}, {selectedApplication.municipality}, {selectedApplication.province}
+                                                {selectedApplication.barangay?.barangay_name || 'N/A'}, {selectedApplication.barangay?.municipality?.municipality_name || 'N/A'}, {selectedApplication.barangay?.municipality?.province?.province_name || 'N/A'}
                                             </p>
                                         </div>
                                     </div>
@@ -315,11 +427,11 @@ const InsuranceApplications = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-sm text-gray-600">Type</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.animalTypeDisplay}</p>
+                                            <p className="font-medium text-gray-900">{(selectedApplication.animal_type || selectedApplication.animalType)?.animal_type_name || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Purpose</p>
-                                            <p className="font-medium text-gray-900 capitalize">{selectedApplication.purpose?.replace('_', ' ')}</p>
+                                            <p className="font-medium text-gray-900 capitalize">{selectedApplication.purpose?.purpose_name || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -330,11 +442,11 @@ const InsuranceApplications = () => {
                                     <div className="grid grid-cols-3 gap-4">
                                         <div>
                                             <p className="text-sm text-gray-600">Number of Heads</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.numberOfHeads}</p>
+                                            <p className="font-medium text-gray-900">{selectedApplication.number_of_heads || 0}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Age</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.age || 'N/A'} months</p>
+                                            <p className="font-medium text-gray-900">{selectedApplication.age_months || 'N/A'} months</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Breed</p>
@@ -342,15 +454,15 @@ const InsuranceApplications = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Color</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.basicColor || 'N/A'}</p>
+                                            <p className="font-medium text-gray-900">{selectedApplication.basic_color || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Male</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.male || '0'}</p>
+                                            <p className="font-medium text-gray-900">{selectedApplication.male_count || '0'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Female</p>
-                                            <p className="font-medium text-gray-900">{selectedApplication.female || '0'}</p>
+                                            <p className="font-medium text-gray-900">{selectedApplication.female_count || '0'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -360,27 +472,27 @@ const InsuranceApplications = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-sm text-gray-600">Status</p>
-                                            <div className="mt-1">{getStatusBadge(selectedApplication.status)}</div>
+                                            <div className="mt-1">{getStatusBadge((selectedApplication.status?.status_name || 'pending').toLowerCase())}</div>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600">Date Submitted</p>
-                                            <p className="font-medium text-gray-900">{formatDate(selectedApplication.submittedAt)}</p>
+                                            <p className="font-medium text-gray-900">{formatDate(selectedApplication.submitted_at)}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
-                                {selectedApplication.status === 'pending' && (
+                                {(selectedApplication.status?.status_name || 'pending').toLowerCase() === 'pending' && (
                                     <>
                                         <button
-                                            onClick={() => handleStatusUpdate(selectedApplication.id, 'approved')}
+                                            onClick={() => handleStatusUpdate(selectedApplication.application_id, 'approved')}
                                             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                                         >
                                             Approve Application
                                         </button>
                                         <button
-                                            onClick={() => handleStatusUpdate(selectedApplication.id, 'rejected')}
+                                            onClick={() => handleStatusUpdate(selectedApplication.application_id, 'rejected')}
                                             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                                         >
                                             Reject Application

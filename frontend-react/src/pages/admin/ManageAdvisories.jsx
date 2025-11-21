@@ -1,103 +1,128 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Search, Plus } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import toast from 'react-hot-toast';
+import { advisoryService, referenceService } from '../../services/api';
 
 const ManageAdvisories = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [advisories, setAdvisories] = useState([
-        {
-            id: 1,
-            title: 'Avian Influenza Alert',
-            description: 'Critical alert for bird flu in surrounding areas',
-            severity: 'high',
-            date: '2025-11-10',
-        },
-        {
-            id: 2,
-            title: 'Seasonal Vaccination Update',
-            description: 'Vaccination season reminder and guidelines',
-            severity: 'medium',
-            date: '2025-11-08',
-        },
-        {
-            id: 3,
-            title: 'Water Quality Standards',
-            description: 'New water testing requirements for livestock',
-            severity: 'low',
-            date: '2025-11-01',
-        },
-    ]);
+    const [advisories, setAdvisories] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [severities, setSeverities] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchAdvisories();
+        fetchCategories();
+        fetchSeverities();
+    }, []);
+
+    const fetchAdvisories = async () => {
+        try {
+            const response = await advisoryService.getAll();
+            // Handle paginated response
+            const advisoriesData = response.data.data || response.data;
+            setAdvisories(Array.isArray(advisoriesData) ? advisoriesData : []);
+        } catch (error) {
+            console.error('Error fetching advisories:', error);
+            toast.error('Failed to load advisories');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const response = await referenceService.getAdvisoryCategories();
+            setCategories(response.data);
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    };
+
+    const fetchSeverities = async () => {
+        try {
+            const response = await referenceService.getAdvisorySeverities();
+            setSeverities(response.data);
+        } catch (error) {
+            console.error('Error fetching severities:', error);
+        }
+    };
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        severity: 'medium',
+        category_id: '',
+        severity_id: '',
+        expires_at: '',
     });
 
-    const filteredAdvisories = advisories.filter(
+    const filteredAdvisories = Array.isArray(advisories) ? advisories.filter(
         (advisory) =>
-            advisory.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            advisory.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+            advisory.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            advisory.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
     const handleOpenModal = (advisory = null) => {
         if (advisory) {
-            setEditingId(advisory.id);
+            setEditingId(advisory.advisory_id);
             setFormData({
                 title: advisory.title,
                 description: advisory.description,
-                severity: advisory.severity,
+                category_id: advisory.category_id || '',
+                severity_id: advisory.severity_id || '',
+                expires_at: advisory.expires_at ? advisory.expires_at.split('T')[0] : '',
             });
         } else {
             setEditingId(null);
             setFormData({
                 title: '',
                 description: '',
-                severity: 'medium',
+                category_id: '',
+                severity_id: '',
+                expires_at: '',
             });
         }
         setShowModal(true);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (editingId) {
-            setAdvisories(
-                advisories.map((a) =>
-                    a.id === editingId
-                        ? { ...a, ...formData, date: a.date }
-                        : a
-                )
-            );
-            toast.success('Advisory updated successfully');
-        } else {
-            setAdvisories([
-                ...advisories,
-                {
-                    ...formData,
-                    id: Date.now(),
-                    date: new Date().toISOString().split('T')[0],
-                },
-            ]);
-            toast.success('Advisory created successfully');
+        try {
+            if (editingId) {
+                await advisoryService.update(editingId, formData);
+                toast.success('Advisory updated successfully');
+            } else {
+                await advisoryService.create(formData);
+                toast.success('Advisory created successfully');
+            }
+            setShowModal(false);
+            fetchAdvisories();
+        } catch (error) {
+            console.error('Error saving advisory:', error);
+            toast.error(error.response?.data?.message || 'Failed to save advisory');
         }
-
-        setShowModal(false);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this advisory?')) {
-            setAdvisories(advisories.filter((a) => a.id !== id));
-            toast.success('Advisory deleted');
+            try {
+                await advisoryService.delete(id);
+                toast.success('Advisory deleted');
+                fetchAdvisories();
+            } catch (error) {
+                console.error('Error deleting advisory:', error);
+                toast.error('Failed to delete advisory');
+            }
         }
     };
 
-    const getSeverityColor = (severity) => {
+    const getSeverityColor = (severityObj) => {
+        const severity = severityObj?.severity_name?.toLowerCase() || 'low';
         switch (severity) {
             case 'high':
                 return 'bg-red-100 text-red-700';
@@ -164,8 +189,7 @@ const ManageAdvisories = () => {
                                                         advisory.severity
                                                     )}`}
                                                 >
-                                                    {advisory.severity.charAt(0).toUpperCase() +
-                                                        advisory.severity.slice(1)}
+                                                    {advisory.severity?.severity_name || 'Low'}
                                                 </span>
                                             </div>
                                             <p className="text-secondary-700">{advisory.description}</p>
