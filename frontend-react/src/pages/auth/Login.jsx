@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EnvelopeIcon, LockClosedIcon, ExclamationCircleIcon, ArrowRightIcon, CheckCircleIcon, XMarkIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, LockClosedIcon, ExclamationCircleIcon, ArrowRightIcon, CheckCircleIcon, XMarkIcon, Bars3Icon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 import { validateEmail } from '../../utils/helpers';
 import toast, { Toaster } from 'react-hot-toast';
@@ -12,7 +12,12 @@ const Login = () => {
     const [activeTab, setActiveTab] = useState('login'); // 'login' or 'register'
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showRegPassword, setShowRegPassword] = useState(false);
+    const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
     const [currentSection, setCurrentSection] = useState(0);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const [loginData, setLoginData] = useState({
         email: '',
         password: '',
@@ -27,6 +32,7 @@ const Login = () => {
     // Scroll sections handler
     useEffect(() => {
         const handleScroll = () => {
+            setScrolled(window.scrollY > 20);
             const sections = document.querySelectorAll('.hero-section');
             sections.forEach((section, index) => {
                 const rect = section.getBoundingClientRect();
@@ -184,41 +190,87 @@ const Login = () => {
             <div className="min-h-screen bg-slate-900 text-white">
 
                 {/* Fixed Top Navigation */}
-                <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
-                    <div className="max-w-7xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-between">
-                        {/* Logo */}
-                        <div className="flex items-center gap-2">
-                            <div className="w-12 h-12 bg-red-600 rounded flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">NV</span>
+                <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+                        ? 'bg-white/98 backdrop-blur-xl shadow-lg border-b border-gray-100'
+                        : 'bg-white/95 backdrop-blur-sm shadow-sm'
+                    }`}>
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+                        <div className="flex items-center justify-between h-20">
+                            {/* Logo */}
+                            <div className="flex items-center gap-3 group cursor-pointer">
+                                <div className="relative">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-red-600 via-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all group-hover:scale-105">
+                                        <span className="text-white font-bold text-xl">NV</span>
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-2xl font-bold text-gray-900 tracking-tight">NutriVet</span>
+                                        <span className="px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded-full">Bansud</span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 font-medium">Livestock Health Management</p>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <span className="text-2xl font-bold text-gray-900">NutriVet</span>
-                                <span className="text-red-600 text-3xl font-light">•</span>
+
+                            {/* Center Nav Links */}
+                            <div className="hidden lg:flex items-center gap-1">
+                                <a href="#section-1" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Education</a>
+                                <a href="#section-3" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Diagnostics</a>
+                                <a href="#section-4" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">MSI</a>
+                                <a href="#section-5" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Euthanization</a>
+                                <a href="#about" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">About Us</a>
+                            </div>
+
+                            {/* Right Side - Login & Mobile Menu */}
+                            <div className="flex items-center gap-3">
+                                {/* Sign In Button */}
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('login');
+                                        setShowModal(true);
+                                    }}
+                                    className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold px-6 py-2.5 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
+                                >
+                                    <LockClosedIcon className="w-5 h-5" />
+                                    Sign In
+                                </button>
+
+                                {/* Mobile Menu Button */}
+                                <button
+                                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                    className="lg:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    {mobileMenuOpen ? (
+                                        <XMarkIcon className="w-6 h-6" />
+                                    ) : (
+                                        <Bars3Icon className="w-6 h-6" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 
-                        {/* Center Nav Links */}
-                        <div className="hidden lg:flex items-center gap-8">
-                            <a href="#section-1" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Education</a>
-                            <a href="#section-3" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Diagnostics</a>
-                            <a href="#section-4" className="text-gray-700 hover:text-red-600 font-medium transition-colors">MSI</a>
-                            <a href="#section-5" className="text-gray-700 hover:text-red-600 font-medium transition-colors">Euthanization</a>
-                            <a href="#about" className="text-gray-700 hover:text-red-600 font-medium transition-colors">About Us</a>
-                        </div>
-
-                        {/* Right Side - Search and Login */}
-                        <div className="flex items-center gap-4">
-
-                            <button
-                                onClick={() => {
-                                    setActiveTab('login');
-                                    setShowModal(true);
-                                }}
-                                className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded transition-all"
-                            >
-                                Sign In
-                            </button>
-                        </div>
+                        {/* Mobile Menu */}
+                        {mobileMenuOpen && (
+                            <div className="lg:hidden border-t border-gray-100 py-4 space-y-2">
+                                <a href="#section-1" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Education</a>
+                                <a href="#section-3" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Diagnostics</a>
+                                <a href="#section-4" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">MSI</a>
+                                <a href="#section-5" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Euthanization</a>
+                                <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">About Us</a>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab('login');
+                                        setShowModal(true);
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold px-6 py-2.5 rounded-xl shadow-lg mt-3"
+                                >
+                                    <LockClosedIcon className="w-5 h-5" />
+                                    Sign In
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </nav>
 
@@ -347,7 +399,7 @@ const Login = () => {
                                     Compassionate end-of-life care services provided with dignity and respect for your animals.
                                 </p>
                                 <button
-                                   
+
                                     className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded transition-all"
                                 >
                                     CONTACT US
@@ -513,62 +565,104 @@ const Login = () => {
                     <div className="fixed inset-0 z-50 overflow-y-auto">
                         {/* Backdrop */}
                         <div
-                            className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm transition-opacity"
+                            className="fixed inset-0 bg-gradient-to-br from-red-900/40 via-slate-900/60 to-green-900/40 backdrop-blur-md transition-opacity"
                             onClick={() => setShowModal(false)}
                         ></div>
 
                         {/* Modal Content */}
                         <div className="flex items-center justify-center min-h-screen px-4 py-8">
-                            <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-10 relative">
+                            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md p-8 relative animate-fadeIn">
                                 {/* Close Button */}
                                 <button
                                     onClick={() => setShowModal(false)}
-                                    className="absolute top-4 right-4 w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center text-xl font-bold transition-colors"
+                                    className="absolute top-4 right-4 w-10 h-10 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-full flex items-center justify-center transition-all hover:scale-110 group"
                                 >
-                                    ×
+                                    <XMarkIcon className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                                 </button>
 
+                                {/* Modal Header */}
+                                <div className="text-center mb-8">
+                                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mb-4 shadow-lg">
+                                        <LockClosedIcon className="w-8 h-8 text-white" />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                                        {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
+                                    </h2>
+                                    <p className="text-gray-500 text-sm">
+                                        {activeTab === 'login' ? 'Sign in to access your account' : 'Join NutriVet Bansud community'}
+                                    </p>
+                                </div>
+
                                 {/* Modal Body */}
-                                <div className="mt-8">
+                                <div>
                                     {/* LOGIN TAB */}
                                     {activeTab === 'login' && (
                                         <div>
                                             <form onSubmit={handleLoginSubmit} className="space-y-5">
                                                 {/* Email Field */}
                                                 <div>
-                                                    <input
-                                                        id="login-email"
-                                                        type="email"
-                                                        name="email"
-                                                        value={loginData.email}
-                                                        onChange={handleLoginChange}
-                                                        placeholder="username"
-                                                        className={`w-full px-4 py-3 bg-white border rounded focus:outline-none text-black placeholder-gray-500 ${errors.email
-                                                            ? 'border-red-500'
-                                                            : 'border-gray-300'
-                                                            }`}
-                                                    />
+                                                    <label htmlFor="login-email" className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Email Address
+                                                    </label>
+                                                    <div className="relative">
+                                                        <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <input
+                                                            id="login-email"
+                                                            type="email"
+                                                            name="email"
+                                                            value={loginData.email}
+                                                            onChange={handleLoginChange}
+                                                            placeholder="your@email.com"
+                                                            className={`w-full pl-10 pr-4 py-3 bg-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${errors.email
+                                                                ? 'border-red-300 bg-red-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
+                                                                }`}
+                                                        />
+                                                    </div>
                                                     {errors.email && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.email}</p>
+                                                        <p className="mt-2 text-red-600 text-xs flex items-center gap-1">
+                                                            <ExclamationCircleIcon className="w-4 h-4" />
+                                                            {errors.email}
+                                                        </p>
                                                     )}
                                                 </div>
 
                                                 {/* Password Field */}
                                                 <div>
-                                                    <input
-                                                        id="login-password"
-                                                        type="password"
-                                                        name="password"
-                                                        value={loginData.password}
-                                                        onChange={handleLoginChange}
-                                                        placeholder="password"
-                                                        className={`w-full px-4 py-3 bg-white border rounded focus:outline-none text-black placeholder-gray-500 ${errors.password
-                                                            ? 'border-red-500'
-                                                            : 'border-gray-300'
-                                                            }`}
-                                                    />
+                                                    <label htmlFor="login-password" className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Password
+                                                    </label>
+                                                    <div className="relative">
+                                                        <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <input
+                                                            id="login-password"
+                                                            type={showLoginPassword ? "text" : "password"}
+                                                            name="password"
+                                                            value={loginData.password}
+                                                            onChange={handleLoginChange}
+                                                            placeholder="Enter your password"
+                                                            className={`w-full pl-10 pr-12 py-3 bg-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${errors.password
+                                                                ? 'border-red-300 bg-red-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
+                                                                }`}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                                        >
+                                                            {showLoginPassword ? (
+                                                                <EyeSlashIcon className="w-5 h-5" />
+                                                            ) : (
+                                                                <EyeIcon className="w-5 h-5" />
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                     {errors.password && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.password}</p>
+                                                        <p className="mt-2 text-red-600 text-xs flex items-center gap-1">
+                                                            <ExclamationCircleIcon className="w-4 h-4" />
+                                                            {errors.password}
+                                                        </p>
                                                     )}
                                                 </div>
 
@@ -576,25 +670,45 @@ const Login = () => {
                                                 <button
                                                     type="submit"
                                                     disabled={loading}
-                                                    className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded transition-all font-medium uppercase tracking-wide"
+                                                    className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl transition-all font-semibold uppercase tracking-wide shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-6"
                                                 >
-                                                    {loading ? 'Signing in...' : 'LOGIN'}
+                                                    {loading ? (
+                                                        <>
+                                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                            Signing in...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Sign In
+                                                            <ArrowRightIcon className="w-5 h-5" />
+                                                        </>
+                                                    )}
                                                 </button>
 
                                                 {/* Links */}
-                                                <div className="text-right mt-4">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setActiveTab('register')}
-                                                        className="text-sm text-gray-500 hover:text-gray-700"
-                                                    >
-                                                        Don't have an account? <span className="text-red-600 hover:text-red-700 font-medium">Sign up</span>
-                                                    </button>
-                                                </div>
-                                                <div className="text-right mt-2">
-                                                    <a href="#" className="text-sm text-gray-500 hover:text-gray-700">
-                                                        Forgot your password? <span className="text-red-600 hover:text-red-700 font-medium">Reset password</span>
-                                                    </a>
+                                                <div className="mt-6 space-y-3">
+                                                    <div className="relative">
+                                                        <div className="absolute inset-0 flex items-center">
+                                                            <div className="w-full border-t border-gray-200"></div>
+                                                        </div>
+                                                        <div className="relative flex justify-center text-sm">
+                                                            <span className="px-4 bg-white text-gray-500">or</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setActiveTab('register')}
+                                                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                                                        >
+                                                            Don't have an account? <span className="text-red-600 hover:text-red-700 font-semibold">Sign up</span>
+                                                        </button>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <a href="#" className="text-xs text-gray-500 hover:text-red-600 transition-colors">
+                                                            Forgot password?
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </form>
                                         </div>
@@ -606,77 +720,132 @@ const Login = () => {
                                             <form onSubmit={handleRegisterSubmit} className="space-y-5">
                                                 {/* Name Field */}
                                                 <div>
+                                                    <label htmlFor="reg-name" className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Full Name
+                                                    </label>
                                                     <input
                                                         id="reg-name"
                                                         type="text"
                                                         name="name"
                                                         value={registerData.name}
                                                         onChange={handleRegisterChange}
-                                                        placeholder="Full Name"
-                                                        className={`w-full px-4 py-3 bg-white border rounded focus:outline-none text-black placeholder-gray-500 ${errors.name
-                                                            ? 'border-red-500'
-                                                            : 'border-gray-300'
+                                                        placeholder="Juan Dela Cruz"
+                                                        className={`w-full px-4 py-3 bg-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${errors.name
+                                                            ? 'border-red-300 bg-red-50'
+                                                            : 'border-gray-200 hover:border-gray-300'
                                                             }`}
                                                     />
                                                     {errors.name && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.name}</p>
+                                                        <p className="mt-2 text-red-600 text-xs flex items-center gap-1">
+                                                            <ExclamationCircleIcon className="w-4 h-4" />
+                                                            {errors.name}
+                                                        </p>
                                                     )}
                                                 </div>
 
                                                 {/* Email Field */}
                                                 <div>
-                                                    <input
-                                                        id="reg-email"
-                                                        type="email"
-                                                        name="email"
-                                                        value={registerData.email}
-                                                        onChange={handleRegisterChange}
-                                                        placeholder="Email"
-                                                        className={`w-full px-4 py-3 bg-white border rounded focus:outline-none text-black placeholder-gray-500 ${errors.email
-                                                            ? 'border-red-500'
-                                                            : 'border-gray-300'
-                                                            }`}
-                                                    />
+                                                    <label htmlFor="reg-email" className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Email Address
+                                                    </label>
+                                                    <div className="relative">
+                                                        <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <input
+                                                            id="reg-email"
+                                                            type="email"
+                                                            name="email"
+                                                            value={registerData.email}
+                                                            onChange={handleRegisterChange}
+                                                            placeholder="your@email.com"
+                                                            className={`w-full pl-10 pr-4 py-3 bg-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${errors.email
+                                                                ? 'border-red-300 bg-red-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
+                                                                }`}
+                                                        />
+                                                    </div>
                                                     {errors.email && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.email}</p>
+                                                        <p className="mt-2 text-red-600 text-xs flex items-center gap-1">
+                                                            <ExclamationCircleIcon className="w-4 h-4" />
+                                                            {errors.email}
+                                                        </p>
                                                     )}
                                                 </div>
 
                                                 {/* Password Field */}
                                                 <div>
-                                                    <input
-                                                        id="reg-password"
-                                                        type="password"
-                                                        name="password"
-                                                        value={registerData.password}
-                                                        onChange={handleRegisterChange}
-                                                        placeholder="Password"
-                                                        className={`w-full px-4 py-3 bg-white border rounded focus:outline-none text-black placeholder-gray-500 ${errors.password
-                                                            ? 'border-red-500'
-                                                            : 'border-gray-300'
-                                                            }`}
-                                                    />
+                                                    <label htmlFor="reg-password" className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Password
+                                                    </label>
+                                                    <div className="relative">
+                                                        <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <input
+                                                            id="reg-password"
+                                                            type={showRegPassword ? "text" : "password"}
+                                                            name="password"
+                                                            value={registerData.password}
+                                                            onChange={handleRegisterChange}
+                                                            placeholder="Create a strong password"
+                                                            className={`w-full pl-10 pr-12 py-3 bg-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${errors.password
+                                                                ? 'border-red-300 bg-red-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
+                                                                }`}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowRegPassword(!showRegPassword)}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                                        >
+                                                            {showRegPassword ? (
+                                                                <EyeSlashIcon className="w-5 h-5" />
+                                                            ) : (
+                                                                <EyeIcon className="w-5 h-5" />
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                     {errors.password && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.password}</p>
+                                                        <p className="mt-2 text-red-600 text-xs flex items-center gap-1">
+                                                            <ExclamationCircleIcon className="w-4 h-4" />
+                                                            {errors.password}
+                                                        </p>
                                                     )}
                                                 </div>
 
                                                 {/* Confirm Password Field */}
                                                 <div>
-                                                    <input
-                                                        id="reg-confirm"
-                                                        type="password"
-                                                        name="passwordConfirm"
-                                                        value={registerData.passwordConfirm}
-                                                        onChange={handleRegisterChange}
-                                                        placeholder="Confirm Password"
-                                                        className={`w-full px-4 py-3 bg-white border rounded focus:outline-none text-black placeholder-gray-500 ${errors.passwordConfirm
-                                                            ? 'border-red-500'
-                                                            : 'border-gray-300'
-                                                            }`}
-                                                    />
+                                                    <label htmlFor="reg-confirm" className="block text-sm font-semibold text-gray-700 mb-2">
+                                                        Confirm Password
+                                                    </label>
+                                                    <div className="relative">
+                                                        <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                        <input
+                                                            id="reg-confirm"
+                                                            type={showRegConfirmPassword ? "text" : "password"}
+                                                            name="passwordConfirm"
+                                                            value={registerData.passwordConfirm}
+                                                            onChange={handleRegisterChange}
+                                                            placeholder="Re-enter your password"
+                                                            className={`w-full pl-10 pr-12 py-3 bg-white border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${errors.passwordConfirm
+                                                                ? 'border-red-300 bg-red-50'
+                                                                : 'border-gray-200 hover:border-gray-300'
+                                                                }`}
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                                        >
+                                                            {showRegConfirmPassword ? (
+                                                                <EyeSlashIcon className="w-5 h-5" />
+                                                            ) : (
+                                                                <EyeIcon className="w-5 h-5" />
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                     {errors.passwordConfirm && (
-                                                        <p className="mt-1 text-red-500 text-xs">{errors.passwordConfirm}</p>
+                                                        <p className="mt-2 text-red-600 text-xs flex items-center gap-1">
+                                                            <ExclamationCircleIcon className="w-4 h-4" />
+                                                            {errors.passwordConfirm}
+                                                        </p>
                                                     )}
                                                 </div>
 
@@ -684,20 +853,40 @@ const Login = () => {
                                                 <button
                                                     type="submit"
                                                     disabled={loading}
-                                                    className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded transition-all font-medium uppercase tracking-wide"
+                                                    className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-xl transition-all font-semibold uppercase tracking-wide shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-6"
                                                 >
-                                                    {loading ? 'Creating account...' : 'SIGN UP'}
+                                                    {loading ? (
+                                                        <>
+                                                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                            Creating account...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            Create Account
+                                                            <CheckCircleIcon className="w-5 h-5" />
+                                                        </>
+                                                    )}
                                                 </button>
 
                                                 {/* Links */}
-                                                <div className="text-right mt-4">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setActiveTab('login')}
-                                                        className="text-sm text-gray-500 hover:text-gray-700"
-                                                    >
-                                                        Already have an account? <span className="text-red-600 hover:text-red-700 font-medium">Sign in</span>
-                                                    </button>
+                                                <div className="mt-6 space-y-3">
+                                                    <div className="relative">
+                                                        <div className="absolute inset-0 flex items-center">
+                                                            <div className="w-full border-t border-gray-200"></div>
+                                                        </div>
+                                                        <div className="relative flex justify-center text-sm">
+                                                            <span className="px-4 bg-white text-gray-500">or</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setActiveTab('login')}
+                                                            className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                                                        >
+                                                            Already have an account? <span className="text-red-600 hover:text-red-700 font-semibold">Sign in</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </form>
                                         </div>
