@@ -97,7 +97,7 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-secondary-50">
+        <div className="flex flex-col h-screen bg-secondary-50 dark:bg-gray-900">
             <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
             <div className="flex flex-1 overflow-hidden">
                 <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
@@ -107,10 +107,10 @@ const AdminDashboard = () => {
                     <div className="p-4 sm:p-6 lg:p-8">
                         {/* Header */}
                         <div className="mb-8">
-                            <h1 className="text-3xl font-bold text-secondary-900">
+                            <h1 className="text-3xl font-bold text-secondary-900 dark:text-gray-100">
                                 Administration Dashboard 👨‍💼
                             </h1>
-                            <p className="text-secondary-600 mt-1">
+                            <p className="text-secondary-600 dark:text-gray-400 mt-1">
                                 System overview and key metrics
                             </p>
                         </div>
@@ -280,37 +280,37 @@ const AdminDashboard = () => {
 
                         {/* Quick Actions */}
                         <div className="mt-8">
-                            <h3 className="text-lg font-semibold text-secondary-900 mb-4">
+                            <h3 className="text-lg font-semibold text-secondary-900 dark:text-gray-100 mb-4">
                                 Quick Actions
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <a
                                     href="/admin/reports"
-                                    className="p-4 bg-white rounded-lg border border-secondary-200 hover:border-primary-500 hover:shadow-card transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-secondary-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-red-500 hover:shadow-card transition-all text-center"
                                 >
-                                    <Users className="w-8 h-8 text-primary-600 mx-auto mb-2" />
-                                    <p className="font-medium text-secondary-900">Manage Users</p>
+                                    <Users className="w-8 h-8 text-primary-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-secondary-900 dark:text-gray-300">Manage Users</p>
                                 </a>
                                 <a
                                     href="/admin/reports"
-                                    className="p-4 bg-white rounded-lg border border-secondary-200 hover:border-primary-500 hover:shadow-card transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-secondary-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-red-500 hover:shadow-card transition-all text-center"
                                 >
-                                    <FileText className="w-8 h-8 text-primary-600 mx-auto mb-2" />
-                                    <p className="font-medium text-secondary-900">View Reports</p>
+                                    <FileText className="w-8 h-8 text-primary-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-secondary-900 dark:text-gray-300">View Reports</p>
                                 </a>
                                 <a
                                     href="/admin/advisories"
-                                    className="p-4 bg-white rounded-lg border border-secondary-200 hover:border-primary-500 hover:shadow-card transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-secondary-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-red-500 hover:shadow-card transition-all text-center"
                                 >
-                                    <AlertCircle className="w-8 h-8 text-primary-600 mx-auto mb-2" />
-                                    <p className="font-medium text-secondary-900">Manage Advisories</p>
+                                    <AlertCircle className="w-8 h-8 text-primary-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-secondary-900 dark:text-gray-300">Manage Advisories</p>
                                 </a>
                                 <a
                                     href="/admin/map"
-                                    className="p-4 bg-white rounded-lg border border-secondary-200 hover:border-primary-500 hover:shadow-card transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-secondary-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-red-500 hover:shadow-card transition-all text-center"
                                 >
-                                    <Activity className="w-8 h-8 text-primary-600 mx-auto mb-2" />
-                                    <p className="font-medium text-secondary-900">View Map</p>
+                                    <Activity className="w-8 h-8 text-primary-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-secondary-900 dark:text-gray-300">View Map</p>
                                 </a>
                             </div>
                         </div>

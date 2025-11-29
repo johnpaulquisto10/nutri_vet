@@ -187,12 +187,12 @@ const Login = () => {
     return (
         <>
             <Toaster />
-            <div className="min-h-screen bg-slate-900 text-white">
+            <div className="min-h-screen" style={{ background: 'transparent' }}>
 
                 {/* Fixed Top Navigation */}
                 <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-                        ? 'bg-white/98 backdrop-blur-xl shadow-lg border-b border-gray-100'
-                        : 'bg-white/95 backdrop-blur-sm shadow-sm'
+                    ? 'bg-white/98 dark:bg-gray-900/98 backdrop-blur-xl shadow-lg border-b border-gray-100 dark:border-gray-700'
+                    : 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm'
                     }`}>
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
                         <div className="flex items-center justify-between h-20">
@@ -202,7 +202,6 @@ const Login = () => {
                                     <div className="w-12 h-12 bg-gradient-to-br from-red-600 via-red-600 to-red-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all group-hover:scale-105">
                                         <span className="text-white font-bold text-xl">NV</span>
                                     </div>
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-1.5">
@@ -215,11 +214,11 @@ const Login = () => {
 
                             {/* Center Nav Links */}
                             <div className="hidden lg:flex items-center gap-1">
-                                <a href="#section-1" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Education</a>
-                                <a href="#section-3" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Diagnostics</a>
-                                <a href="#section-4" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">MSI</a>
-                                <a href="#section-5" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Euthanization</a>
-                                <a href="#about" className="px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">About Us</a>
+                                <a href="#section-1" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Education</a>
+                                <a href="#section-3" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Diagnostics</a>
+                                <a href="#section-4" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">MSI</a>
+                                <a href="#section-5" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Euthanization</a>
+                                <a href="#about" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">About Us</a>
                             </div>
 
                             {/* Right Side - Login & Mobile Menu */}
@@ -239,7 +238,7 @@ const Login = () => {
                                 {/* Mobile Menu Button */}
                                 <button
                                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                    className="lg:hidden p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                                    className="lg:hidden p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                 >
                                     {mobileMenuOpen ? (
                                         <XMarkIcon className="w-6 h-6" />
@@ -252,12 +251,12 @@ const Login = () => {
 
                         {/* Mobile Menu */}
                         {mobileMenuOpen && (
-                            <div className="lg:hidden border-t border-gray-100 py-4 space-y-2">
-                                <a href="#section-1" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Education</a>
-                                <a href="#section-3" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Diagnostics</a>
-                                <a href="#section-4" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">MSI</a>
-                                <a href="#section-5" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">Euthanization</a>
-                                <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 font-medium rounded-lg transition-all">About Us</a>
+                            <div className="lg:hidden border-t border-gray-100 dark:border-gray-700 py-4 space-y-2">
+                                <a href="#section-1" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Education</a>
+                                <a href="#section-3" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Diagnostics</a>
+                                <a href="#section-4" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">MSI</a>
+                                <a href="#section-5" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Euthanization</a>
+                                <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">About Us</a>
                                 <button
                                     onClick={() => {
                                         setActiveTab('login');
@@ -273,28 +272,6 @@ const Login = () => {
                         )}
                     </div>
                 </nav>
-
-                {/* Left Side Navigation Numbers */}
-                <div className="fixed left-8 top-1/2 -translate-y-1/2 z-40 hidden lg:block">
-                    <div className="flex flex-col gap-4">
-                        {sections.map((section, index) => (
-                            <button
-                                key={section.id}
-                                onClick={() => {
-                                    const element = document.getElementById(`section-${section.id}`);
-                                    element?.scrollIntoView({ behavior: 'smooth' });
-                                }}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${currentSection === index
-                                    ? 'bg-red-600 text-white shadow-lg scale-110'
-                                    : 'bg-white/10 text-gray-400 hover:bg-red-600/20 hover:text-red-600 border border-gray-600/30'
-                                    }`}
-                            >
-                                0{section.id}
-                            </button>
-                        ))}
-                        <div className="w-px h-20 bg-red-600/30 mx-auto mt-2"></div>
-                    </div>
-                </div>
 
                 {/* Hero Sections */}
                 <div>
@@ -428,7 +405,7 @@ const Login = () => {
                     </section>
 
                     {/* About Us Section */}
-                    <section id="about" className="bg-white py-20">
+                    <section id="about" className="bg-white dark:bg-gray-900 py-20 transition-colors duration-300">
                         <div className="max-w-7xl mx-auto px-6 lg:px-12">
                             <div className="max-w-4xl mx-auto">
                                 <div className="text-center mb-12">
@@ -443,7 +420,7 @@ const Login = () => {
                                         DA Bansud gives direct support to local farmers and livestock owners. The office provides field assistance, vet guidance, and farm monitoring to improve livestock health and daily farm operations in the municipality.
                                     </p>
 
-                                    <div className="bg-gray-50 rounded-xl p-8 my-8">
+                                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 my-8 transition-colors duration-300">
                                         <h3 className="text-2xl font-semibold text-gray-900 mb-6">Main Services</h3>
                                         <ul className="space-y-3">
                                             <li className="flex items-start gap-3">
@@ -571,11 +548,11 @@ const Login = () => {
 
                         {/* Modal Content */}
                         <div className="flex items-center justify-center min-h-screen px-4 py-8">
-                            <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 w-full max-w-md p-8 relative animate-fadeIn">
+                            <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 w-full max-w-md p-8 relative animate-fadeIn transition-colors duration-300">
                                 {/* Close Button */}
                                 <button
                                     onClick={() => setShowModal(false)}
-                                    className="absolute top-4 right-4 w-10 h-10 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-full flex items-center justify-center transition-all hover:scale-110 group"
+                                    className="absolute top-4 right-4 w-10 h-10 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 rounded-full flex items-center justify-center transition-all hover:scale-110 group"
                                 >
                                     <XMarkIcon className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
                                 </button>

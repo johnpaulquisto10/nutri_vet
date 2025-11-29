@@ -51,7 +51,7 @@ const UserDashboard = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-gray-50">
+        <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
             <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
             <div className="flex flex-1 overflow-hidden">
                 <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
@@ -61,10 +61,10 @@ const UserDashboard = () => {
                     <div className="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
                         {/* Header */}
                         <div className="mb-8">
-                            <h1 className="text-3xl font-semibold text-gray-800">
+                            <h1 className="text-3xl font-semibold text-gray-800 dark:text-gray-100">
                                 Welcome, {user?.full_name || user?.name || 'User'}! 👋
                             </h1>
-                            <p className="text-gray-600 mt-1">
+                            <p className="text-gray-600 dark:text-gray-400 mt-1">
                                 Here's an overview of your livestock and recent reports
                             </p>
                         </div>
@@ -110,13 +110,13 @@ const UserDashboard = () => {
                                         {recentReports.map((report) => (
                                             <div
                                                 key={report.report_id || report.id}
-                                                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-red-600 transition-colors"
+                                                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-red-600 dark:hover:border-red-500 transition-colors"
                                             >
                                                 <div className="flex-1">
-                                                    <h4 className="font-medium text-gray-800">
+                                                    <h4 className="font-medium text-gray-800 dark:text-gray-100">
                                                         {report.disease?.disease_name || report.disease || 'Unknown Disease'}
                                                     </h4>
-                                                    <p className="text-sm text-gray-500">
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">
                                                         {new Date(report.submitted_at || report.date).toLocaleDateString()}
                                                     </p>
                                                 </div>
@@ -142,19 +142,19 @@ const UserDashboard = () => {
                                 <ChartCard title="Latest Advisories">
                                     <div className="space-y-3">
                                         {advisories.length === 0 ? (
-                                            <p className="text-center text-gray-500 py-4">
+                                            <p className="text-center text-gray-500 dark:text-gray-400 py-4">
                                                 No new advisories
                                             </p>
                                         ) : (
                                             advisories.map((advisory) => (
                                                 <div
                                                     key={advisory.advisory_id}
-                                                    className="p-4 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:border-red-600 transition-colors"
+                                                    className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700 cursor-pointer hover:border-red-600 dark:hover:border-red-500 transition-colors"
                                                 >
-                                                    <h4 className="font-medium text-gray-800 text-sm">
+                                                    <h4 className="font-medium text-gray-800 dark:text-gray-100 text-sm">
                                                         {advisory.title}
                                                     </h4>
-                                                    <p className="text-xs text-gray-600 mt-1">
+                                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                                         {new Date(advisory.published_at || advisory.created_at).toLocaleDateString()}
                                                     </p>
                                                 </div>
@@ -167,37 +167,37 @@ const UserDashboard = () => {
 
                         {/* Quick Actions */}
                         <div className="mt-8">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
                                 Quick Actions
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <a
                                     href="/user/animals"
-                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-600 dark:hover:border-red-500 hover:shadow-lg transition-all text-center"
                                 >
-                                    <BoltIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                                    <p className="font-medium text-gray-700">Manage Livestock</p>
+                                    <BoltIcon className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700 dark:text-gray-300">Manage Livestock</p>
                                 </a>
                                 <a
                                     href="/user/reports"
-                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-600 dark:hover:border-red-500 hover:shadow-lg transition-all text-center"
                                 >
-                                    <DocumentTextIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                                    <p className="font-medium text-gray-700">Submit Report</p>
+                                    <DocumentTextIcon className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700 dark:text-gray-300">Submit Report</p>
                                 </a>
                                 <a
                                     href="/user/advisories"
-                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-600 dark:hover:border-red-500 hover:shadow-lg transition-all text-center"
                                 >
-                                    <ExclamationCircleIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                                    <p className="font-medium text-gray-700">View Advisories</p>
+                                    <ExclamationCircleIcon className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700 dark:text-gray-300">View Advisories</p>
                                 </a>
                                 <a
                                     href="/user/animals"
-                                    className="p-4 bg-white rounded-lg border border-gray-200 hover:border-red-600 hover:shadow-lg transition-all text-center"
+                                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-red-600 dark:hover:border-red-500 hover:shadow-lg transition-all text-center"
                                 >
-                                    <ArrowTrendingUpIcon className="w-8 h-8 text-red-600 mx-auto mb-2" />
-                                    <p className="font-medium text-gray-700">Health Stats</p>
+                                    <ArrowTrendingUpIcon className="w-8 h-8 text-red-600 dark:text-red-400 mx-auto mb-2" />
+                                    <p className="font-medium text-gray-700 dark:text-gray-300">Health Stats</p>
                                 </a>
                             </div>
                         </div>

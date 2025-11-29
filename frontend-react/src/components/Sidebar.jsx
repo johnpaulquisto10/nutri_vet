@@ -45,11 +45,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     path: '/admin/map',
                 },
                 {
-                    label: 'Export',
-                    icon: ArrowDownTrayIcon,
-                    path: '/admin/export',
-                },
-                {
                     label: 'Insurance',
                     icon: ShieldCheckIcon,
                     path: '/admin/insurance',
@@ -95,13 +90,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
             {/* Sidebar */}
             <aside
-                className={`fixed top-16 left-0 bottom-0 z-40 w-64 bg-white border-r border-gray-200 overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed top-16 left-0 bottom-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 overflow-y-auto transition-all duration-300 ease-in-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 {/* Mobile close button */}
                 <button
                     onClick={toggleSidebar}
-                    className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 lg:hidden text-gray-600 z-50"
+                    className="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden text-gray-600 dark:text-gray-300 z-50 transition-colors"
                 >
                     <XMarkIcon className="w-5 h-5" />
                 </button>
@@ -118,8 +113,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                 to={item.path}
                                 onClick={() => toggleSidebar()}
                                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${active
-                                    ? 'bg-red-50 text-red-600 font-medium shadow-sm'
-                                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                                    ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-medium shadow-sm'
+                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                                     }`}
                             >
                                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -130,13 +125,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </nav>
 
                 {/* Settings at bottom */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-colors">
                     <Link
                         to={role === 'admin' ? '/admin/settings' : '/user/settings'}
                         onClick={() => toggleSidebar()}
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive(role === 'admin' ? '/admin/settings' : '/user/settings')
-                            ? 'bg-red-50 text-red-600'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                             }`}
                     >
                         <Cog6ToothIcon className="w-5 h-5 flex-shrink-0" />

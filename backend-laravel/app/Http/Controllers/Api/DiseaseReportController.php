@@ -203,13 +203,15 @@ class DiseaseReportController extends Controller
     public function destroy(Request $request, $id)
     {
         $report = DiseaseReport::findOrFail($id);
+        $user = $request->user();
 
-        // Only reporter can delete and only if submitted
-        if ($report->reporter_id !== $request->user()->id) {
+        // Admin can delete any report, farmer can only delete their own
+        if (!$user->isAdmin() && $report->reporter_id !== $user->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        if ($report->status->status_name !== 'Pending') {
+        // Farmers can only delete pending reports, admins can delete any status
+        if (!$user->isAdmin() && $report->status->status_name !== 'Pending') {
             return response()->json([
                 'message' => 'Cannot delete report that is being investigated or resolved'
             ], 422);

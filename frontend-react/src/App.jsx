@@ -12,7 +12,6 @@ import AdminDashboard from './pages/admin/Dashboard'
 import ManageReports from './pages/admin/ManageReports'
 import ManageAdvisories from './pages/admin/ManageAdvisories'
 import InteractiveMap from './pages/admin/InteractiveMap'
-import ExportReports from './pages/admin/ExportReports'
 import AdminSettings from './pages/admin/Settings'
 import InsuranceApplications from './pages/admin/InsuranceApplications'
 import PrivateRoute from './routes/PrivateRoute'
@@ -107,14 +106,6 @@ const App = () => {
         element={
           <RoleBasedRoute allowedRoles={["admin"]}>
             <InteractiveMap />
-          </RoleBasedRoute>
-        }
-      />
-      <Route
-        path="/admin/export"
-        element={
-          <RoleBasedRoute allowedRoles={["admin"]}>
-            <ExportReports />
           </RoleBasedRoute>
         }
       />

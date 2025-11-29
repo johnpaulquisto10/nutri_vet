@@ -137,7 +137,7 @@ const ManageAdvisories = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-secondary-50">
+        <div className="flex flex-col h-screen bg-secondary-50 dark:bg-gray-900">
             <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
             <div className="flex flex-1 overflow-hidden">
                 <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
