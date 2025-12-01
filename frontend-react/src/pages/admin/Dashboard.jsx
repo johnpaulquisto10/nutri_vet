@@ -247,7 +247,7 @@ const AdminDashboard = () => {
                                                         {report.reporter?.full_name || report.farmer || 'N/A'}
                                                     </td>
                                                     <td className="px-4 py-3 text-secondary-700">
-                                                        {report.disease?.disease_name || report.disease_name_custom || report.disease || 'N/A'}
+                                                        {report.disease_name_custom || report.disease?.disease_name || report.disease || 'N/A'}
                                                     </td>
                                                     <td className="px-4 py-3 text-secondary-600">
                                                         {new Date(report.submitted_at || report.date).toLocaleDateString()}

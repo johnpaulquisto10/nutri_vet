@@ -170,8 +170,8 @@ class AdvisoryController extends Controller
             return response()->json(['unread_count' => 0]);
         }
 
-        $readIds = $request->user()->readAdvisories()->pluck('advisories.id')->toArray();
-        $activeIds = Advisory::active()->pluck('id')->toArray();
+        $readIds = $request->user()->readAdvisories()->pluck('advisories.advisory_id')->toArray();
+        $activeIds = Advisory::active()->pluck('advisory_id')->toArray();
 
         $unreadCount = count(array_diff($activeIds, $readIds));
 

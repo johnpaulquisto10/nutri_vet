@@ -80,7 +80,7 @@ const InteractiveMap = () => {
                 id: report.report_id,
                 lat: parseFloat(report.latitude),
                 lng: parseFloat(report.longitude),
-                label: report.disease?.disease_name || report.disease_name_custom || 'Unknown Disease',
+                label: report.disease_name_custom || report.disease?.disease_name || 'Unknown Disease',
                 animalName: report.animal_name,
                 description: report.description,
                 date: report.report_date || report.submitted_at,
@@ -195,7 +195,7 @@ const InteractiveMap = () => {
                                     <div>
                                         <p className="text-sm text-gray-500">Disease</p>
                                         <p className="font-semibold text-gray-800">
-                                            {selectedReport.disease?.disease_name || selectedReport.disease_name_custom || 'N/A'}
+                                            {selectedReport.disease_name_custom || selectedReport.disease?.disease_name || 'N/A'}
                                         </p>
                                     </div>
                                     <div>
