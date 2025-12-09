@@ -4,6 +4,7 @@ import Sidebar from '../../components/Sidebar';
 import MapView from '../../components/MapView';
 import { reportService } from '../../services/api';
 import toast from 'react-hot-toast';
+import { ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
 
 const InteractiveMap = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -11,6 +12,7 @@ const InteractiveMap = () => {
     const [loading, setLoading] = useState(true);
     const [selectedReport, setSelectedReport] = useState(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
 
     useEffect(() => {
         fetchReports();
@@ -112,56 +114,111 @@ const InteractiveMap = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-secondary-50 dark:bg-gray-900">
-            <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-            <div className="flex flex-1 overflow-hidden">
-                <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
+        <>
+            <div className="flex flex-col h-screen bg-secondary-50 dark:bg-gray-900">
+                <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+                <div className="flex flex-1 overflow-hidden">
+                    <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(false)} />
 
-                <main className="flex-1 overflow-auto lg:ml-64">
-                    <div className="p-4 sm:p-6 lg:p-8">
-                        <h1 className="text-3xl font-bold text-secondary-900 mb-2">Reports Map</h1>
-                        <p className="text-secondary-600 mb-6">Interactive map showing report locations in Bansud, Oriental Mindoro</p>
+                    <main className="flex-1 overflow-auto lg:ml-64">
+                        <div className="p-4 sm:p-6 lg:p-8">
+                            <h1 className="text-3xl font-bold text-secondary-900 mb-2">Reports Map</h1>
+                            <p className="text-secondary-600 mb-6">Interactive map showing report locations in Bansud, Oriental Mindoro</p>
 
-                        {loading ? (
-                            <div className="flex items-center justify-center h-96">
-                                <div className="text-gray-600">Loading reports...</div>
-                            </div>
-                        ) : (
-                            <div>
-                                <div className="mb-4 bg-white p-4 rounded-lg shadow">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-gray-700">
-                                                <span className="font-semibold text-2xl text-red-600">{reports.length}</span>
-                                                <span className="ml-2">total reports</span>
-                                            </p>
-                                            <p className="text-sm text-gray-500 mt-1">
-                                                {markers.length} with valid locations • Click red pulsing dots to view details
-                                            </p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                🔄 Auto-refreshing every 30 seconds
-                                            </p>
+                            {loading ? (
+                                <div className="flex items-center justify-center h-96">
+                                    <div className="text-gray-600">Loading reports...</div>
+                                </div>
+                            ) : (
+                                <div>
+                                    <div className="mb-4 bg-white p-4 rounded-lg shadow">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-gray-700">
+                                                    <span className="font-semibold text-2xl text-red-600">{reports.length}</span>
+                                                    <span className="ml-2">total reports</span>
+                                                </p>
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    {markers.length} with valid locations • Click red pulsing dots to view details
+                                                </p>
+                                                <p className="text-xs text-gray-400 mt-1">
+                                                    🔄 Auto-refreshing every 30 seconds
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => setIsFullScreen(true)}
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                                                >
+                                                    <ArrowsPointingOutIcon className="w-5 h-5" />
+                                                    Fullscreen
+                                                </button>
+                                                <button
+                                                    onClick={fetchReports}
+                                                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                                                >
+                                                    Refresh Now
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button
-                                            onClick={fetchReports}
-                                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                                        >
-                                            Refresh Now
-                                        </button>
+                                    </div>
+                                    <div className="h-[700px] rounded-lg overflow-hidden shadow-lg">
+                                        <MapView
+                                            markers={markers}
+                                            center={[12.8167, 121.4667]}
+                                            zoom={13}
+                                            markerType="pulsing"
+                                            onMarkerClick={handleMarkerClick}
+                                        />
                                     </div>
                                 </div>
-                                <MapView
-                                    markers={markers}
-                                    center={[12.8167, 121.4667]}
-                                    zoom={13}
-                                    markerType="pulsing"
-                                    onMarkerClick={handleMarkerClick}
-                                />
-                            </div>
-                        )}
-                    </div>
-                </main>
+                            )}
+                        </div>
+                    </main>
+                </div>
             </div>
+
+            {/* Fullscreen Map Modal */}
+            {isFullScreen && (
+                <div className="fixed inset-0 bg-black z-50 flex flex-col">
+                    {/* Fullscreen Header */}
+                    <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800">Reports Map - Fullscreen</h2>
+                            <p className="text-sm text-gray-600 mt-1">
+                                <span className="font-semibold text-red-600">{reports.length}</span> total reports •
+                                <span className="ml-1">{markers.length} with valid locations</span>
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={fetchReports}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                            >
+                                🔄 Refresh
+                            </button>
+                            <button
+                                onClick={() => setIsFullScreen(false)}
+                                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium flex items-center gap-2"
+                            >
+                                <ArrowsPointingInIcon className="w-5 h-5" />
+                                Exit Fullscreen
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Fullscreen Map */}
+                    <div className="flex-1">
+                        <MapView
+                            markers={markers}
+                            center={[12.8167, 121.4667]}
+                            zoom={13}
+                            markerType="pulsing"
+                            onMarkerClick={handleMarkerClick}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Report Details Modal */}
             {showDetailsModal && selectedReport && (
@@ -256,7 +313,7 @@ const InteractiveMap = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

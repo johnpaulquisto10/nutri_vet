@@ -5,6 +5,7 @@ import Sidebar from '../../components/Sidebar';
 import BottomNav from '../../components/BottomNav';
 import DashboardCard from '../../components/DashboardCard';
 import ChartCard from '../../components/ChartCard';
+import { CardSkeleton, ListSkeleton } from '../../components/SkeletonLoader';
 import { useAuth } from '../../context/AuthContext';
 import { dashboardService } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -70,70 +71,78 @@ const UserDashboard = () => {
                         </div>
 
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            <DashboardCard
-                                icon={BoltIcon}
-                                label="Insured Animals"
-                                value={stats.totalAnimals}
-                                trend="Approved applications"
-                                trendUp={true}
-                            />
-                            <DashboardCard
-                                icon={DocumentTextIcon}
-                                label="Active Reports"
-                                value={stats.activeReports}
-                                trend="3 pending"
-                                trendUp={false}
-                            />
-                            <DashboardCard
-                                icon={ExclamationCircleIcon}
-                                label="Resolved Reports"
-                                value={stats.resolvedReports}
-                                trend="100% recovery"
-                                trendUp={true}
-                            />
-                            <DashboardCard
-                                icon={ArrowTrendingUpIcon}
-                                label="New Advisories"
-                                value={stats.advisories}
-                                trend="Latest updates"
-                                trendUp={true}
-                            />
-                        </div>
+                        {loading ? (
+                            <CardSkeleton cards={4} />
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                <DashboardCard
+                                    icon={BoltIcon}
+                                    label="Insured Animals"
+                                    value={stats.totalAnimals}
+                                    trend="Approved applications"
+                                    trendUp={true}
+                                />
+                                <DashboardCard
+                                    icon={DocumentTextIcon}
+                                    label="Active Reports"
+                                    value={stats.activeReports}
+                                    trend="3 pending"
+                                    trendUp={false}
+                                />
+                                <DashboardCard
+                                    icon={ExclamationCircleIcon}
+                                    label="Resolved Reports"
+                                    value={stats.resolvedReports}
+                                    trend="100% recovery"
+                                    trendUp={true}
+                                />
+                                <DashboardCard
+                                    icon={ArrowTrendingUpIcon}
+                                    label="New Advisories"
+                                    value={stats.advisories}
+                                    trend="Latest updates"
+                                    trendUp={true}
+                                />
+                            </div>
+                        )}
 
                         {/* Recent Activity */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Recent Reports */}
                             <div className="lg:col-span-2">
                                 <ChartCard title="Recent Disease Reports">
-                                    <div className="space-y-3">
-                                        {recentReports.map((report) => (
-                                            <div
-                                                key={report.report_id || report.id}
-                                                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-red-600 dark:hover:border-red-500 transition-colors"
-                                            >
-                                                <div className="flex-1">
-                                                    <h4 className="font-medium text-gray-800 dark:text-gray-100">
-                                                        {report.disease?.disease_name || report.disease || 'Unknown Disease'}
-                                                    </h4>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {new Date(report.submitted_at || report.date).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-sm font-medium ${(report.status?.status_name || report.status || '').toLowerCase() === 'resolved'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-yellow-100 text-yellow-700'
-                                                        }`}
+                                    {loading ? (
+                                        <ListSkeleton items={3} />
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {recentReports.map((report) => (
+                                                <div
+                                                    key={report.report_id || report.id}
+                                                    className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-red-600 dark:hover:border-red-500 transition-colors"
                                                 >
-                                                    {(() => {
-                                                        const statusText = report.status?.status_name || report.status || 'pending';
-                                                        return statusText.charAt(0).toUpperCase() + statusText.slice(1);
-                                                    })()}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
+                                                    <div className="flex-1">
+                                                        <h4 className="font-medium text-gray-800 dark:text-gray-100">
+                                                            {report.disease_name_custom || report.disease?.disease_name || report.disease || 'Unknown Disease'}
+                                                        </h4>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                            {new Date(report.submitted_at || report.date).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                    <span
+                                                        className={`px-3 py-1 rounded-full text-sm font-medium ${(report.status?.status_name || report.status || '').toLowerCase() === 'resolved'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-yellow-100 text-yellow-700'
+                                                            }`}
+                                                    >
+                                                        {(() => {
+                                                            const statusText = report.status?.status_name || report.status || 'pending';
+                                                            return statusText.charAt(0).toUpperCase() + statusText.slice(1);
+                                                        })()}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </ChartCard>
                             </div>
 

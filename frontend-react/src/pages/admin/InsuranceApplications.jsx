@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DocumentTextIcon, CheckCircleIcon, XCircleIcon, ClockIcon, MagnifyingGlassIcon, EyeIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
+import { TableSkeleton } from '../../components/SkeletonLoader';
 import toast from 'react-hot-toast';
 import { insuranceService } from '../../services/api';
 import { confirmApprove, confirmReject, successAlert } from '../../utils/sweetAlert';
@@ -10,25 +11,32 @@ const InsuranceApplications = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [applications, setApplications] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterStatus, setFilterStatus] = useState('pending');
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [adminNotes, setAdminNotes] = useState('');
     const [refreshing, setRefreshing] = useState(false);
+    const [lastApplicationCount, setLastApplicationCount] = useState(0);
+    const [pagesByStatus, setPagesByStatus] = useState({
+        pending: 1,
+        approved: 1,
+        rejected: 1,
+        all: 1
+    });
     const itemsPerPage = 10;
 
     useEffect(() => {
         loadApplications();
 
-        // Auto-refresh every 30 seconds to show new applications
+        // Auto-refresh every 15 seconds to show new applications
         const interval = setInterval(() => {
-            loadApplications(true); // silent refresh with notification check
-        }, 30000);
+            loadApplications(true, true); // silent refresh with notification check
+        }, 15000);
 
         return () => clearInterval(interval);
-    }, [applications.length]); // Re-run when applications count changes
+    }, []); // Remove dependency to avoid re-creating interval
 
     const loadApplications = async (silent = false, checkForNew = false) => {
         try {
@@ -41,29 +49,38 @@ const InsuranceApplications = () => {
 
             // Handle paginated response
             const applicationsData = response.data.data || response.data;
-            const newCount = applicationsData.length;
-            const oldCount = applications.length;
+            const applicationsList = Array.isArray(applicationsData) ? applicationsData : [];
+            const currentCount = applicationsList.length;
 
-            console.log('📊 Admin: Applications count - Old:', oldCount, 'New:', newCount);
-            if (applicationsData.length > 0) {
-                console.log('🔍 Admin: First application sample:', applicationsData[0]);
-                console.log('🔍 Admin: AnimalType data:', applicationsData[0]?.animalType);
+            console.log('📊 Admin: Applications count - Old:', lastApplicationCount, 'New:', currentCount);
+            if (applicationsList.length > 0) {
+                console.log('🔍 Admin: First application sample:', applicationsList[0]);
+                console.log('🔍 Admin: AnimalType data:', applicationsList[0]?.animalType);
             }
 
             // Check for new applications
-            if (checkForNew && newCount > oldCount) {
-                const newAppsCount = newCount - oldCount;
+            if (checkForNew && lastApplicationCount > 0 && currentCount > lastApplicationCount) {
+                const newAppsCount = currentCount - lastApplicationCount;
+                const latestApp = applicationsList[0]; // Assuming sorted by newest first
+
                 toast.success(
-                    `🔔 ${newAppsCount} new insurance application${newAppsCount > 1 ? 's' : ''} received!`,
+                    `🔔 New insurance application from ${latestApp?.farmer?.full_name || latestApp?.user?.full_name || 'a farmer'}!`,
                     {
                         duration: 6000,
-                        icon: '🆕'
+                        icon: '🆕',
+                        style: {
+                            background: '#3b82f6',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                        }
                     }
                 );
                 console.log(`✅ Admin: ${newAppsCount} new applications detected!`);
             }
 
-            setApplications(Array.isArray(applicationsData) ? applicationsData : []);
+            setLastApplicationCount(currentCount);
+
+            setApplications(applicationsList);
 
             if (!silent && !checkForNew) {
                 toast.success(`Loaded ${newCount} insurance applications`);
@@ -131,6 +148,21 @@ const InsuranceApplications = () => {
         setShowModal(true);
     };
 
+    // Handle status change and reset to that status's saved page
+    const handleStatusChange = (status) => {
+        setFilterStatus(status);
+        setCurrentPage(pagesByStatus[status]);
+    };
+
+    // Handle page change and save it for current status
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+        setPagesByStatus(prev => ({
+            ...prev,
+            [filterStatus]: newPage
+        }));
+    };
+
     // Filter and search
     const filteredApplications = applications.filter(app => {
         const farmerName = app.applicant?.full_name || '';
@@ -145,6 +177,14 @@ const InsuranceApplications = () => {
         const matchesStatus = filterStatus === 'all' || status === filterStatus;
         return matchesSearch && matchesStatus;
     });
+
+    // Get counts for each status
+    const statusCounts = {
+        all: applications.length,
+        pending: applications.filter(a => (a.status?.status_name || 'pending').toLowerCase() === 'pending').length,
+        approved: applications.filter(a => (a.status?.status_name || 'pending').toLowerCase() === 'approved').length,
+        rejected: applications.filter(a => (a.status?.status_name || 'pending').toLowerCase() === 'rejected').length
+    };
 
     // Pagination
     const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
@@ -215,50 +255,77 @@ const InsuranceApplications = () => {
                             </div>
                         </div>
 
-                        {/* Status Summary */}
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-blue-800">
-                                        Database Status: {applications.length} Total Applications
-                                    </p>
-                                    <p className="text-xs text-blue-600 mt-1">
-                                        Pending: {applications.filter(a => a.status?.status_name === 'Pending').length} |
-                                        Approved: {applications.filter(a => a.status?.status_name === 'Approved').length} |
-                                        Rejected: {applications.filter(a => a.status?.status_name === 'Rejected').length}
-                                    </p>
-                                </div>
-                                <div className="text-xs text-blue-600">
-                                    Last updated: {new Date().toLocaleTimeString()}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Filters */}
+                        {/* Status Pills */}
                         <div className="bg-white rounded-xl shadow-card p-6 mb-6">
-                            <div className="flex flex-col md:flex-row gap-4">
-                                <div className="flex-1">
-                                    <div className="relative">
-                                        <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search by farmer name, barangay, or animal type..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                        />
-                                    </div>
-                                </div>
-                                <select
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value)}
-                                    className="px-4 py-2 border border-gray-300 text-gray-900 bg-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            <div className="flex flex-wrap gap-3 mb-6">
+                                <button
+                                    onClick={() => handleStatusChange('pending')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'pending'
+                                        ? 'bg-yellow-500 text-white shadow-lg transform scale-105'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
                                 >
-                                    <option value="all" className="text-gray-900 bg-white">All Status</option>
-                                    <option value="pending" className="text-gray-900 bg-white">Pending</option>
-                                    <option value="approved" className="text-gray-900 bg-white">Approved</option>
-                                    <option value="rejected" className="text-gray-900 bg-white">Rejected</option>
-                                </select>
+                                    <ClockIcon className="w-5 h-5" />
+                                    Pending
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'pending' ? 'bg-white text-yellow-600' : 'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                        {statusCounts.pending}
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange('approved')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'approved'
+                                        ? 'bg-green-500 text-white shadow-lg transform scale-105'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <CheckCircleIcon className="w-5 h-5" />
+                                    Approved
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'approved' ? 'bg-white text-green-600' : 'bg-green-100 text-green-700'
+                                        }`}>
+                                        {statusCounts.approved}
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange('rejected')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'rejected'
+                                        ? 'bg-red-500 text-white shadow-lg transform scale-105'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <XCircleIcon className="w-5 h-5" />
+                                    Rejected
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'rejected' ? 'bg-white text-red-600' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                        {statusCounts.rejected}
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange('all')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'all'
+                                        ? 'bg-primary-600 text-white shadow-lg transform scale-105'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <DocumentTextIcon className="w-5 h-5" />
+                                    All Applications
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'all' ? 'bg-white text-primary-600' : 'bg-primary-100 text-primary-700'
+                                        }`}>
+                                        {statusCounts.all}
+                                    </span>
+                                </button>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="relative">
+                                <MagnifyingGlassIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by farmer name, barangay, or animal type..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                                />
                             </div>
                         </div>
 
@@ -284,17 +351,16 @@ const InsuranceApplications = () => {
                                                 Date Applied
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Actions
                                             </th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
-                                        {paginatedApplications.length === 0 ? (
+                                        {loading ? (
+                                            <TableSkeleton rows={5} columns={6} />
+                                        ) : paginatedApplications.length === 0 ? (
                                             <tr>
-                                                <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                                <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
                                                     <DocumentTextIcon className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                                                     <p className="text-lg font-medium">No applications found</p>
                                                     <p className="text-sm">Applications will appear here when submitted</p>
@@ -318,9 +384,6 @@ const InsuranceApplications = () => {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {formatDate(app.submitted_at)}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        {getStatusBadge((app.status?.status_name || 'pending').toLowerCase())}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                         <button
@@ -366,7 +429,7 @@ const InsuranceApplications = () => {
                                         </p>
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                                 disabled={currentPage === 1}
                                                 className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                                             >
@@ -375,7 +438,7 @@ const InsuranceApplications = () => {
                                             {[...Array(totalPages)].map((_, i) => (
                                                 <button
                                                     key={i + 1}
-                                                    onClick={() => setCurrentPage(i + 1)}
+                                                    onClick={() => handlePageChange(i + 1)}
                                                     className={`px-3 py-1 border rounded-lg ${currentPage === i + 1
                                                         ? 'bg-primary-600 text-white border-primary-600'
                                                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -385,7 +448,7 @@ const InsuranceApplications = () => {
                                                 </button>
                                             ))}
                                             <button
-                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                                                 disabled={currentPage === totalPages}
                                                 className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                                             >

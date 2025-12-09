@@ -146,8 +146,8 @@ const MapView = ({ markers = [], center = [12.8167, 121.4667], zoom = 13, onMark
     return (
         <div
             ref={mapRef}
-            style={{ height: '400px', width: '100%', borderRadius: '1rem', zIndex: 1 }}
-            className="rounded-2xl border border-gray-200 relative"
+            style={{ height: '100%', width: '100%', borderRadius: '1rem', zIndex: 1 }}
+            className="rounded-2xl border border-gray-200 relative h-full"
         />
     );
 };

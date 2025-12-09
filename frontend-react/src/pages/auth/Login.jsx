@@ -29,6 +29,19 @@ const Login = () => {
         passwordConfirm: '',
     });
 
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (showModal) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [showModal]);
+
     // Scroll sections handler
     useEffect(() => {
         const handleScroll = () => {
@@ -178,7 +191,6 @@ const Login = () => {
     };
 
     const sections = [
-        { id: 1, label: 'Education' },
         { id: 2, label: 'Diagnostics' },
         { id: 3, label: 'MSI' },
         { id: 4, label: 'Euthanization' }
@@ -214,7 +226,6 @@ const Login = () => {
 
                             {/* Center Nav Links */}
                             <div className="hidden lg:flex items-center gap-1">
-                                <a href="#section-1" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Education</a>
                                 <a href="#section-3" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Diagnostics</a>
                                 <a href="#section-4" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">MSI</a>
                                 <a href="#section-5" className="px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Euthanization</a>
@@ -252,7 +263,6 @@ const Login = () => {
                         {/* Mobile Menu */}
                         {mobileMenuOpen && (
                             <div className="lg:hidden border-t border-gray-100 dark:border-gray-700 py-4 space-y-2">
-                                <a href="#section-1" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Education</a>
                                 <a href="#section-3" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Diagnostics</a>
                                 <a href="#section-4" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">MSI</a>
                                 <a href="#section-5" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-gray-800 font-medium rounded-lg transition-all">Euthanization</a>
@@ -276,8 +286,8 @@ const Login = () => {
                 {/* Hero Sections */}
                 <div>
 
-                    {/* Section 1 - Education */}
-                    <section id="section-1" className="hero-section relative min-h-screen flex items-center overflow-hidden pt-20">
+                    {/* Section 1 - About Us */}
+                    <section id="about" className="hero-section relative min-h-screen flex items-center overflow-hidden pt-20">
                         {/* Background Image */}
                         <div className="absolute inset-0 bg-cover bg-center" style={{
                             backgroundImage: 'url(https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=1600&h=900&fit=crop)',
@@ -286,35 +296,83 @@ const Login = () => {
 
                         {/* Content */}
                         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 w-full py-20">
-                            <div className="max-w-2xl mb-32">
-                                <h1 className="text-6xl lg:text-7xl font-light text-white mb-6">Education</h1>
+                            <div className="max-w-3xl mb-16">
+                                <h1 className="text-6xl lg:text-7xl font-light text-white mb-6">About Us</h1>
+                                <h2 className="text-3xl lg:text-4xl font-semibold text-white mb-6">
+                                    Department of Agriculture – Bansud, Oriental Mindoro
+                                </h2>
                                 <p className="text-lg lg:text-xl text-gray-300 mb-8 leading-relaxed">
-                                    Our section is dedicated to enhancing the skills and knowledge of individuals involved in livestock management and veterinary science in Bansud, ensuring our local expertise is competitive and valuable.
+                                    DA Bansud gives direct support to local farmers and livestock owners. The office provides field assistance, vet guidance, and farm monitoring to improve livestock health and daily farm operations in the municipality.
                                 </p>
-
                             </div>
 
-                            {/* Bottom Features */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                <div className="text-white">
-                                    <h3 className="font-semibold mb-2">Undergraduate Studies</h3>
-                                    <p className="text-sm text-gray-400">Master of Veterinary Medicine</p>
-                                    <p className="text-sm text-gray-400">Bachelor of Veterinary Medicine</p>
+                            {/* Main Services Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-white font-semibold mb-1">Livestock Support</h3>
+                                            <p className="text-sm text-gray-300">Management and health guidance</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-white">
-                                    <h3 className="font-semibold mb-2">Postgraduate studies</h3>
-                                    <p className="text-sm text-gray-400">PhD Degree in Veterinary Medicine</p>
-                                    <p className="text-sm text-gray-400">Specializations in 8 branches</p>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-white font-semibold mb-1">Vet Assistance</h3>
+                                            <p className="text-sm text-gray-300">Disease control and prevention</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-white">
-                                    <h3 className="font-semibold mb-2">Professional development</h3>
-                                    <p className="text-sm text-gray-400">Short courses for veterinarians</p>
-                                    <p className="text-sm text-gray-400">Courses, Praktika, Small Animals</p>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-white font-semibold mb-1">Field Visits</h3>
+                                            <p className="text-sm text-gray-300">Farm checks and monitoring</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-white">
-                                    <h3 className="font-semibold mb-2">Permanent education</h3>
-                                    <p className="text-sm text-gray-400">Training lectures, Virtual farm</p>
-                                    <p className="text-sm text-gray-400">Hands-on workshops</p>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-white font-semibold mb-1">Farm Inputs</h3>
+                                            <p className="text-sm text-gray-300">Resources when available</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-white font-semibold mb-1">Training Programs</h3>
+                                            <p className="text-sm text-gray-300">Info sessions and workshops</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                                    <div className="flex items-start gap-3">
+                                        <svg className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <div>
+                                            <h3 className="text-white font-semibold mb-1">Barangay Support</h3>
+                                            <p className="text-sm text-gray-300">Livestock monitoring and coordination</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -404,77 +462,6 @@ const Login = () => {
                         </div>
                     </section>
 
-                    {/* About Us Section */}
-                    <section id="about" className="bg-white dark:bg-gray-900 py-20 transition-colors duration-300">
-                        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                            <div className="max-w-4xl mx-auto">
-                                <div className="text-center mb-12">
-                                    <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-                                        Department of Agriculture – Bansud, Oriental Mindoro
-                                    </h2>
-                                    <div className="w-24 h-1 bg-red-600 mx-auto"></div>
-                                </div>
-
-                                <div className="space-y-6 text-gray-700 leading-relaxed">
-                                    <p className="text-lg">
-                                        DA Bansud gives direct support to local farmers and livestock owners. The office provides field assistance, vet guidance, and farm monitoring to improve livestock health and daily farm operations in the municipality.
-                                    </p>
-
-                                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 my-8 transition-colors duration-300">
-                                        <h3 className="text-2xl font-semibold text-gray-900 mb-6">Main Services</h3>
-                                        <ul className="space-y-3">
-                                            <li className="flex items-start gap-3">
-                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                <span className="text-gray-700">Livestock management support</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                <span className="text-gray-700">Vet assistance and disease control</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                <span className="text-gray-700">Field visits and farm checks</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                <span className="text-gray-700">Farm inputs when available</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                <span className="text-gray-700">Trainings and info sessions</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                <span className="text-gray-700">Livestock monitoring in barangays</span>
-                                            </li>
-                                            <li className="flex items-start gap-3">
-                                                <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                <span className="text-gray-700">Support for DA MIMAROPA and LGU projects</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    <p className="text-lg text-center text-gray-800 font-medium">
-                                        DA Bansud works with the community to keep farms healthy, safe, and productive for all farmers in Bansud.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
                 </div>
 
                 {/* Footer */}
@@ -499,7 +486,6 @@ const Login = () => {
                             <div>
                                 <h3 className="font-semibold text-white mb-4">Services</h3>
                                 <ul className="space-y-2">
-                                    <li><a href="#education" className="text-gray-400 hover:text-red-600 transition-colors text-sm">Education</a></li>
                                     <li><a href="#diagnostics" className="text-gray-400 hover:text-red-600 transition-colors text-sm">Diagnostics</a></li>
                                     <li><a href="#msi" className="text-gray-400 hover:text-red-600 transition-colors text-sm">MSI</a></li>
                                 </ul>

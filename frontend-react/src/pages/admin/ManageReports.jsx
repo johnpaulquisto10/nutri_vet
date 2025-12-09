@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Search, Plus, CheckCircle } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
+import { TableSkeleton } from '../../components/SkeletonLoader';
 import toast from 'react-hot-toast';
 import { reportService } from '../../services/api';
 import { confirmDelete, confirmResolve, successAlert } from '../../utils/sweetAlert';
@@ -10,16 +11,49 @@ const ManageReports = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [lastReportCount, setLastReportCount] = useState(0);
 
     useEffect(() => {
         fetchReports();
+
+        // Poll for new reports every 15 seconds
+        const interval = setInterval(() => {
+            fetchReports(true);
+        }, 15000);
+
+        return () => clearInterval(interval);
     }, []);
 
-    const fetchReports = async () => {
+    const fetchReports = async (checkForNew = false) => {
         try {
             const response = await reportService.getAll();
             const reportsData = response.data.data || response.data;
-            setReports(Array.isArray(reportsData) ? reportsData : []);
+            const reportsList = Array.isArray(reportsData) ? reportsData : [];
+
+            // Check for new reports
+            if (checkForNew && lastReportCount > 0) {
+                const currentCount = reportsList.length;
+                if (currentCount > lastReportCount) {
+                    const newReportsCount = currentCount - lastReportCount;
+                    const latestReport = reportsList[0]; // Assuming sorted by newest first
+
+                    toast.success(
+                        `🔔 New disease report received from ${latestReport?.reporter?.full_name || 'a farmer'}!`,
+                        {
+                            duration: 6000,
+                            icon: '🆕',
+                            style: {
+                                background: '#10b981',
+                                color: '#fff',
+                                fontWeight: 'bold',
+                            }
+                        }
+                    );
+                }
+            }
+
+            setLastReportCount(reportsList.length);
+            setReports(reportsList);
         } catch (error) {
             console.error('Error fetching reports:', error);
             toast.error('Failed to load reports');
@@ -157,73 +191,78 @@ const ManageReports = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredReports.map((report) => (
-                                            <tr
-                                                key={report.report_id}
-                                                className="border-b border-secondary-100 hover:bg-secondary-50 transition-colors"
-                                            >
-                                                <td className="px-6 py-4 font-medium text-secondary-900">
-                                                    {report.reporter?.full_name || 'Unknown'}
-                                                </td>
-                                                <td className="px-6 py-4 text-secondary-700">
-                                                    {report.disease_name_custom || report.disease?.disease_name || 'Unknown'}
-                                                </td>
-                                                <td className="px-6 py-4 text-secondary-700">
-                                                    {report.animal_name || 'Unknown'}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {report.image_url ? (
-                                                        <img
-                                                            src={report.image_url}
-                                                            alt="Report"
-                                                            className="w-16 h-16 object-cover rounded-lg"
-                                                        />
-                                                    ) : (
-                                                        <span className="text-sm text-secondary-400">No image</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 text-secondary-600">
-                                                    {new Date(report.report_date || report.submitted_at).toLocaleDateString()}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span
-                                                        className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                                                            report.status
-                                                        )}`}
-                                                    >
-                                                        {report.status?.status_name || 'Pending'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        {report.status?.status_name !== 'Resolved' && (
-                                                            <button
-                                                                onClick={() => handleResolve(report.report_id)}
-                                                                className="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors"
-                                                                title="Mark as resolved"
-                                                            >
-                                                                <CheckCircle className="w-4 h-4" />
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => handleDelete(report.report_id)}
-                                                            className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
+                                        {loading ? (
+                                            <TableSkeleton rows={5} columns={7} />
+                                        ) : filteredReports.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                                    <p className="text-lg font-medium">No reports found</p>
+                                                    <p className="text-sm">Reports will appear here when submitted</p>
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            filteredReports.map((report) => (
+                                                <tr
+                                                    key={report.report_id}
+                                                    className="border-b border-secondary-100 hover:bg-secondary-50 transition-colors"
+                                                >
+                                                    <td className="px-6 py-4 font-medium text-secondary-900">
+                                                        {report.reporter?.full_name || 'Unknown'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-secondary-700">
+                                                        {report.disease_name_custom || report.disease?.disease_name || 'Unknown'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-secondary-700">
+                                                        {report.animal_name || 'Unknown'}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {report.image_url ? (
+                                                            <img
+                                                                src={report.image_url}
+                                                                alt="Report"
+                                                                className="w-16 h-16 object-cover rounded-lg"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-sm text-secondary-400">No image</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-secondary-600">
+                                                        {new Date(report.report_date || report.submitted_at).toLocaleDateString()}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span
+                                                            className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                                                                report.status
+                                                            )}`}
+                                                        >
+                                                            {report.status?.status_name || 'Pending'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2">
+                                                            {report.status?.status_name !== 'Resolved' && (
+                                                                <button
+                                                                    onClick={() => handleResolve(report.report_id)}
+                                                                    className="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors"
+                                                                    title="Mark as resolved"
+                                                                >
+                                                                    <CheckCircle className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleDelete(report.report_id)}
+                                                                className="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
-
-                            {filteredReports.length === 0 && (
-                                <div className="text-center py-8 text-secondary-500">
-                                    No reports found
-                                </div>
-                            )}
                         </div>
                     </div>
                 </main>

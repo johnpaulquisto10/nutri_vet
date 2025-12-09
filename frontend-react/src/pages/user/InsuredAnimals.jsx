@@ -3,6 +3,7 @@ import { ShieldCheckIcon, MagnifyingGlassIcon, DocumentTextIcon } from '@heroico
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import BottomNav from '../../components/BottomNav';
+import { ListSkeleton } from '../../components/SkeletonLoader';
 import { insuranceService } from '../../services/api';
 import toast from 'react-hot-toast';
 
@@ -11,10 +12,18 @@ const InsuredAnimals = () => {
     const [applications, setApplications] = useState([]);
     const [filteredApplications, setFilteredApplications] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterStatus, setFilterStatus] = useState('pending');
     const [selectedApplication, setSelectedApplication] = useState(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagesByStatus, setPagesByStatus] = useState({
+        pending: 1,
+        approved: 1,
+        rejected: 1,
+        all: 1
+    });
+    const itemsPerPage = 10;
 
     useEffect(() => {
         loadApplications();
@@ -38,6 +47,19 @@ const InsuredAnimals = () => {
         }
     };
 
+    const handleStatusChange = (status) => {
+        setFilterStatus(status);
+        setCurrentPage(pagesByStatus[status]);
+    };
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+        setPagesByStatus(prev => ({
+            ...prev,
+            [filterStatus]: newPage
+        }));
+    };
+
     const filterApplicationsList = () => {
         let filtered = [...applications];
 
@@ -58,6 +80,21 @@ const InsuredAnimals = () => {
 
         setFilteredApplications(filtered);
     };
+
+    // Get counts for each status
+    const statusCounts = {
+        all: applications.length,
+        pending: applications.filter(a => a.status?.status_name === 'Pending').length,
+        approved: applications.filter(a => a.status?.status_name === 'Approved').length,
+        rejected: applications.filter(a => a.status?.status_name === 'Rejected').length
+    };
+
+    // Pagination
+    const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
+    const paginatedApplications = filteredApplications.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     const getStatusColor = (statusName) => {
         switch (statusName) {
@@ -95,8 +132,68 @@ const InsuredAnimals = () => {
                             </p>
                         </div>
 
-                        {/* Search and Filters */}
-                        <div className="mb-6 space-y-4">
+                        {/* Status Pills and Search */}
+                        <div className="bg-white rounded-xl shadow-card p-6 mb-6">
+                            <div className="flex flex-wrap gap-3 mb-6">
+                                <button
+                                    onClick={() => handleStatusChange('pending')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'pending'
+                                            ? 'bg-yellow-500 text-white shadow-lg transform scale-105'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <DocumentTextIcon className="w-5 h-5" />
+                                    Pending
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'pending' ? 'bg-white text-yellow-600' : 'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                        {statusCounts.pending}
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange('approved')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'approved'
+                                            ? 'bg-green-500 text-white shadow-lg transform scale-105'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <ShieldCheckIcon className="w-5 h-5" />
+                                    Approved
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'approved' ? 'bg-white text-green-600' : 'bg-green-100 text-green-700'
+                                        }`}>
+                                        {statusCounts.approved} 
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange('rejected')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'rejected'
+                                            ? 'bg-red-500 text-white shadow-lg transform scale-105'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <DocumentTextIcon className="w-5 h-5" />
+                                    Rejected
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'rejected' ? 'bg-white text-red-600' : 'bg-red-100 text-red-700'
+                                        }`}>
+                                        {statusCounts.rejected}
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => handleStatusChange('all')}
+                                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${filterStatus === 'all'
+                                            ? 'bg-primary-600 text-white shadow-lg transform scale-105'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    <DocumentTextIcon className="w-5 h-5" />
+                                    All Applications
+                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${filterStatus === 'all' ? 'bg-white text-primary-600' : 'bg-primary-100 text-primary-700'
+                                        }`}>
+                                        {statusCounts.all}
+                                    </span>
+                                </button>
+                            </div>
+
+                            {/* Search Bar */}
                             <div className="relative">
                                 <MagnifyingGlassIcon className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                                 <input
@@ -107,62 +204,12 @@ const InsuredAnimals = () => {
                                     className="w-full pl-10 pr-4 py-2.5 bg-white text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 />
                             </div>
-
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <select
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value)}
-                                    className="flex-1 px-4 py-2 bg-white text-gray-900 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                >
-                                    <option value="all">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Stats Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <div className="bg-white rounded-xl shadow-card p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Total Applications</p>
-                                        <p className="text-2xl font-bold text-gray-900">
-                                            {applications.length}
-                                        </p>
-                                    </div>
-                                    <DocumentTextIcon className="w-10 h-10 text-blue-500" />
-                                </div>
-                            </div>
-
-                            <div className="bg-white rounded-xl shadow-card p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Approved</p>
-                                        <p className="text-2xl font-bold text-green-600">
-                                            {applications.filter(a => a.status?.status_name === 'Approved').length}
-                                        </p>
-                                    </div>
-                                    <ShieldCheckIcon className="w-10 h-10 text-green-500" />
-                                </div>
-                            </div>
-
-                            <div className="bg-white rounded-xl shadow-card p-6">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm text-gray-600 mb-1">Pending</p>
-                                        <p className="text-2xl font-bold text-yellow-600">
-                                            {applications.filter(a => a.status?.status_name === 'Pending').length}
-                                        </p>
-                                    </div>
-                                    <DocumentTextIcon className="w-10 h-10 text-yellow-500" />
-                                </div>
-                            </div>
                         </div>
 
                         {/* Applications List */}
-                        {filteredApplications.length === 0 ? (
+                        {loading ? (
+                            <ListSkeleton items={5} />
+                        ) : paginatedApplications.length === 0 ? (
                             <div className="bg-white rounded-xl shadow-card p-12 text-center">
                                 <ShieldCheckIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -182,7 +229,6 @@ const InsuredAnimals = () => {
                                         <table className="w-full">
                                             <thead className="bg-gray-50 border-b border-gray-200">
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Farmer Name</th>
                                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Animal Type</th>
                                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Breed</th>
                                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Heads</th>
@@ -192,9 +238,8 @@ const InsuredAnimals = () => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {filteredApplications.map((app) => (
+                                                {paginatedApplications.map((app) => (
                                                     <tr key={app.application_id} className="border-b border-gray-100 hover:bg-gray-50">
-                                                        <td className="px-6 py-4 text-gray-900">{app.applicant?.full_name || 'N/A'}</td>
                                                         <td className="px-6 py-4 text-gray-900">{(app.animal_type || app.animalType)?.animal_type_name || 'N/A'}</td>
                                                         <td className="px-6 py-4 text-gray-900">{app.breed || 'N/A'}</td>
                                                         <td className="px-6 py-4 text-gray-900">{app.number_of_heads || 0}</td>
@@ -217,19 +262,60 @@ const InsuredAnimals = () => {
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    {/* Pagination */}
+                                    {totalPages > 1 && (
+                                        <div className="px-6 py-4 border-t border-gray-200">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm text-gray-700">
+                                                    Showing {((currentPage - 1) * itemsPerPage) + 1} to{' '}
+                                                    {Math.min(currentPage * itemsPerPage, filteredApplications.length)} of{' '}
+                                                    {filteredApplications.length} results
+                                                </p>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                                        disabled={currentPage === 1}
+                                                        className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                                    >
+                                                        Previous
+                                                    </button>
+                                                    {[...Array(totalPages)].map((_, i) => (
+                                                        <button
+                                                            key={i + 1}
+                                                            onClick={() => handlePageChange(i + 1)}
+                                                            className={`px-3 py-1 border rounded-lg ${currentPage === i + 1
+                                                                ? 'bg-primary-600 text-white border-primary-600'
+                                                                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                                }`}
+                                                        >
+                                                            {i + 1}
+                                                        </button>
+                                                    ))}
+                                                    <button
+                                                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                                        disabled={currentPage === totalPages}
+                                                        className="px-3 py-1 border border-gray-300 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                                    >
+                                                        Next
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Mobile View */}
                                 <div className="md:hidden space-y-4">
-                                    {filteredApplications.map((app) => (
+                                    {paginatedApplications.map((app) => (
                                         <div key={app.application_id} className="bg-white rounded-xl shadow-card p-4">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div className="flex-1">
                                                     <h3 className="font-semibold text-gray-900 mb-1">
-                                                        {app.applicant?.full_name || 'N/A'}
+                                                        {(app.animal_type || app.animalType)?.animal_type_name || 'N/A'}
                                                     </h3>
                                                     <p className="text-sm text-gray-600">
-                                                        {(app.animal_type || app.animalType)?.animal_type_name || 'N/A'}
+                                                        {app.breed || 'N/A'}
                                                     </p>
                                                 </div>
                                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status?.status_name)}`}>
@@ -256,6 +342,31 @@ const InsuredAnimals = () => {
                                             </button>
                                         </div>
                                     ))}
+
+                                    {/* Mobile Pagination */}
+                                    {totalPages > 1 && (
+                                        <div className="flex flex-col items-center gap-3 pt-4">
+                                            <p className="text-sm text-gray-700">
+                                                Page {currentPage} of {totalPages}
+                                            </p>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                                >
+                                                    Previous
+                                                </button>
+                                                <button
+                                                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}

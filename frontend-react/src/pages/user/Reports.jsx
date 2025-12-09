@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { PlusIcon, MapPinIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect, useRef } from 'react';
+import { PlusIcon, MapPinIcon, PhotoIcon, CameraIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import BottomNav from '../../components/BottomNav';
@@ -16,6 +16,10 @@ const Reports = () => {
     const [selectedReport, setSelectedReport] = useState(null);
     const [location, setLocation] = useState({ lat: 12.8167, lng: 121.4667 });
     const [address, setAddress] = useState('Click on the map to set location');
+    const [showCamera, setShowCamera] = useState(false);
+    const [stream, setStream] = useState(null);
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
     const [formData, setFormData] = useState({
         disease_name: '',
         animal_name: '',
@@ -28,6 +32,15 @@ const Reports = () => {
         fetchReports();
         getCurrentLocation();
     }, []);
+
+    // Cleanup camera stream on unmount
+    useEffect(() => {
+        return () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        };
+    }, [stream]);
 
     // Get user's current location automatically
     const getCurrentLocation = () => {
@@ -48,6 +61,82 @@ const Reports = () => {
             );
         } else {
             toast.error('Geolocation is not supported by your browser');
+        }
+    };
+
+    // Open camera and get location
+    const openCamera = async () => {
+        try {
+            const mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            });
+
+            setStream(mediaStream);
+            setShowCamera(true);
+
+            // Wait for next tick to ensure video element is rendered
+            setTimeout(() => {
+                if (videoRef.current) {
+                    videoRef.current.srcObject = mediaStream;
+                    videoRef.current.play().catch(err => {
+                        console.error('Error playing video:', err);
+                    });
+                }
+            }, 100);
+
+            // Get location when camera opens
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setLocation({ lat: latitude, lng: longitude });
+                        getAddressFromCoords(latitude, longitude);
+                        toast.success('📍 Location captured automatically!');
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                        toast.error('Could not get location. Using current location.');
+                    }
+                );
+            }
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            toast.error('Could not access camera. Please check permissions.');
+        }
+    };
+
+    // Close camera
+    const closeCamera = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+        setShowCamera(false);
+    };
+
+    // Capture photo from camera
+    const capturePhoto = () => {
+        if (canvasRef.current && videoRef.current) {
+            const canvas = canvasRef.current;
+            const video = videoRef.current;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            canvas.toBlob((blob) => {
+                const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                setFormData({ ...formData, image: file });
+                toast.success('📸 Photo captured with location!');
+                closeCamera();
+            }, 'image/jpeg', 0.9);
         }
     };
 
@@ -171,8 +260,14 @@ const Reports = () => {
     const handleMarkerClick = (marker) => {
         const report = reports.find(r => r.report_id === marker.id);
         if (report) {
+            console.log('🗺️ Selected Report Coordinates:', {
+                latitude: report.latitude,
+                longitude: report.longitude,
+                report_id: report.report_id
+            });
             setSelectedReport({
                 ...report,
+                id: report.report_id,
                 disease: report.disease_name_custom || report.disease?.disease_name || 'Unknown Disease',
                 animalName: report.animal_name,
                 description: report.description,
@@ -180,6 +275,8 @@ const Reports = () => {
                 status: report.status?.status_name?.toLowerCase() || 'pending',
                 sitio: 'N/A',
                 barangay: report.address || 'N/A',
+                lat: report.latitude,
+                lng: report.longitude,
                 image_url: report.image_url
             });
             setShowDetailsModal(true);
@@ -270,17 +367,57 @@ const Reports = () => {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Attach Image
                                     </label>
-                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                        <PhotoIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, image: e.target.files?.[0] })
-                                            }
-                                            className="w-full text-sm"
-                                        />
+
+                                    {/* Show captured/selected image preview */}
+                                    {formData.image && (
+                                        <div className="mb-4 relative">
+                                            <img
+                                                src={URL.createObjectURL(formData.image)}
+                                                alt="Preview"
+                                                className="w-full h-48 object-cover rounded-lg"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, image: null })}
+                                                className="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-700"
+                                            >
+                                                <XMarkIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {/* Camera Button */}
+                                        <button
+                                            type="button"
+                                            onClick={openCamera}
+                                            className="flex items-center justify-center gap-2 border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg p-4 hover:bg-blue-100 transition-colors"
+                                        >
+                                            <CameraIcon className="w-6 h-6 text-blue-600" />
+                                            <span className="text-sm font-medium text-blue-700">
+                                                Take Photo
+                                            </span>
+                                        </button>
+
+                                        {/* File Upload Button */}
+                                        <label className="flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors cursor-pointer">
+                                            <PhotoIcon className="w-6 h-6 text-gray-600" />
+                                            <span className="text-sm font-medium text-gray-700">
+                                                Choose File
+                                            </span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) =>
+                                                    setFormData({ ...formData, image: e.target.files?.[0] })
+                                                }
+                                                className="hidden"
+                                            />
+                                        </label>
                                     </div>
+                                    <p className="text-xs text-gray-500 mt-2 text-center">
+                                        📍 Taking a photo automatically captures your current location
+                                    </p>
                                 </div>
 
                                 <button
@@ -308,6 +445,26 @@ const Reports = () => {
                             />
                         </div>
 
+                        {/* Reports Map */}
+                        <div className="bg-white rounded-lg shadow-card p-6">
+                            <div className="mb-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-2">Reports Map</h3>
+                                <p className="text-sm text-gray-600">
+                                    <span className="font-semibold text-red-600">{reports.length}</span> total reports •
+                                    <span className="ml-1">{mapMarkers.filter(m => m.lat && m.lng).length} with valid locations</span>
+                                </p>
+                            </div>
+                            <div className="h-[500px] rounded-lg overflow-hidden shadow-lg">
+                                <MapView
+                                    markers={mapMarkers}
+                                    center={[12.8167, 121.4667]}
+                                    zoom={13}
+                                    markerType="pin"
+                                    onMarkerClick={handleMarkerClick}
+                                />
+                            </div>
+                        </div>
+
                         {/* Reports List */}
                         <div id="reports-list" className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-800">Your Reports</h3>
@@ -320,7 +477,7 @@ const Reports = () => {
                                         <img
                                             src={report.image_url}
                                             alt="Report"
-                                            className="w-full h-48 object-cover"
+                                            className="w-full aspect-video object-cover"
                                         />
                                     )}
                                     <div className="p-6">
@@ -388,7 +545,7 @@ const Reports = () => {
                                                     <img
                                                         src={selectedReport.image_url}
                                                         alt="Report"
-                                                        className="w-full rounded-lg max-h-96 object-cover"
+                                                        className="w-full h-[500px] rounded-lg object-cover"
                                                     />
                                                 </div>
                                             )}
@@ -428,7 +585,7 @@ const Reports = () => {
 
                                                 <div>
                                                     <h3 className="text-sm font-semibold text-gray-700 mb-1">Location</h3>
-                                                    <div className="flex items-start gap-2 text-gray-600">
+                                                    <div className="flex items-start gap-2 text-gray-600 mb-3">
                                                         <MapPinIcon className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                                                         <div>
                                                             <p>Sitio: {selectedReport.sitio}</p>
@@ -436,6 +593,28 @@ const Reports = () => {
                                                             <p className="text-sm text-gray-500 mt-1">Bansud, Oriental Mindoro</p>
                                                         </div>
                                                     </div>
+                                                    {/* Map showing report location */}
+                                                    {selectedReport.lat && selectedReport.lng ? (
+                                                        <div className="h-[300px] rounded-lg overflow-hidden border border-gray-200 mt-3 bg-gray-100">
+                                                            <MapView
+                                                                markers={[{
+                                                                    id: selectedReport.id,
+                                                                    lat: parseFloat(selectedReport.lat),
+                                                                    lng: parseFloat(selectedReport.lng),
+                                                                    label: selectedReport.disease,
+                                                                    animalName: selectedReport.animalName,
+                                                                    description: selectedReport.description
+                                                                }]}
+                                                                center={[parseFloat(selectedReport.lat), parseFloat(selectedReport.lng)]}
+                                                                zoom={15}
+                                                                markerType="pin"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-[300px] rounded-lg overflow-hidden border border-gray-200 mt-3 bg-gray-100 flex items-center justify-center">
+                                                            <p className="text-gray-500 text-sm">📍 No location data available for this report</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
@@ -450,6 +629,46 @@ const Reports = () => {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Camera Modal */}
+                        {showCamera && (
+                            <div className="fixed inset-0 bg-black z-[9999] flex flex-col">
+                                <button
+                                    onClick={closeCamera}
+                                    className="absolute top-4 right-4 z-[10000] text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition-colors"
+                                >
+                                    <XMarkIcon className="w-8 h-8" />
+                                </button>
+
+                                <div className="flex-1 relative overflow-hidden">
+                                    <video
+                                        ref={videoRef}
+                                        autoPlay
+                                        playsInline
+                                        muted
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                        onLoadedMetadata={(e) => {
+                                            console.log('Video metadata loaded:', e.target.videoWidth, 'x', e.target.videoHeight);
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="p-4 bg-gray-900 flex flex-col items-center z-[10000] relative">
+                                    <button
+                                        onClick={capturePhoto}
+                                        className="w-full max-w-md bg-red-600 text-white py-4 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2 shadow-lg"
+                                    >
+                                        <CameraIcon className="w-6 h-6" />
+                                        Capture Photo & Location
+                                    </button>
+                                    <p className="text-sm text-gray-300 text-center mt-3">
+                                        📍 Your location will be captured automatically with the photo
+                                    </p>
+                                </div>
+
+                                <canvas ref={canvasRef} className="hidden" />
                             </div>
                         )}
                     </div>
