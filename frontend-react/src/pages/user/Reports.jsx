@@ -430,19 +430,60 @@ const Reports = () => {
                             </form>
                         </div>
 
-                        {/* Map */}
-                        <div className="mb-8">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                                Your Location
-                                <span className="text-sm font-normal text-gray-600 ml-2">(Auto-detected. Click map to adjust if needed)</span>
-                            </h3>
-                            <MapView
-                                markers={mapMarkers}
-                                onMarkerClick={handleMarkerClick}
-                                onMapClick={handleMapClick}
-                                markerType="pin"
-                                center={[location.lat, location.lng]}
-                            />
+                        {/* Map for Setting Location */}
+                        <div className="mb-8 bg-white rounded-lg shadow-card p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-800">
+                                        Set Report Location
+                                    </h3>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                        Click on the map to pin your exact location
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={getCurrentLocation}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                                >
+                                    <MapPinIcon className="w-5 h-5" />
+                                    Use Current Location
+                                </button>
+                            </div>
+
+                            {/* Location Display */}
+                            <div className="mb-4 bg-gray-50 p-3 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <MapPinIcon className="w-5 h-5 text-red-600" />
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-700">Selected Location:</p>
+                                        <p className="text-xs text-gray-600">{address}</p>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Coordinates: {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Interactive Map */}
+                            <div className="h-[400px] rounded-lg overflow-hidden shadow-lg">
+                                <MapView
+                                    markers={[{
+                                        id: 'user-location',
+                                        lat: location.lat,
+                                        lng: location.lng,
+                                        label: 'Your Report Location',
+                                        description: 'Click anywhere on the map to change this location'
+                                    }]}
+                                    onMapClick={handleMapClick}
+                                    markerType="pin"
+                                    center={[location.lat, location.lng]}
+                                    zoom={15}
+                                />
+                            </div>
+
+                            <p className="text-xs text-gray-500 mt-3 text-center">
+                                💡 Tip: Click on the map to place a pin at your exact location, or use "Use Current Location" button
+                            </p>
                         </div>
 
                         {/* Reports Map */}
